@@ -98,7 +98,7 @@ import { DataService } from '../../core/data.service';
 export class Reportes {
   data = inject(DataService);
   maxV = Math.max(...this.data.ventasSemana.flatMap(d => [d.web, d.fisica]));
-  maxT = Math.max(...this.data.topVendidos.map(p => p.unidades));
+  maxT = Math.max(...this.data.getTopVendidos().map(p => p.unidades));
   pct(v: number) { return (v / this.maxV) * 100; }
   topPct(v: number) { return (v / this.maxT) * 100; }
 }
