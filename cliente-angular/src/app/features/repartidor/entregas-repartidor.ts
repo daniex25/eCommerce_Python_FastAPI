@@ -61,7 +61,7 @@ export class EntregasRepartidor {
   toast = '';
   // entregas asignadas al repartidor 1 (Pedro Castillo) + una ya entregada de ejemplo
   lista: (Entrega & { hora?: string })[] = [
-    ...this.data.entregas.filter(e => e.codigoRepartidor === 1),
+    ...this.data.getEntregas().filter(e => e.codigoRepartidor === 1),
     { codigoEntrega: 99, numeroPedido: 1045, codigoRepartidor: 1, cliente: 'Luis Alberto Vargas', direccionEntrega: 'Av. 28 de Julio 712', distrito: 'Huacho', estadoEntrega: 'Entregado', hora: '10:24' },
   ];
   mias() { return this.lista; }

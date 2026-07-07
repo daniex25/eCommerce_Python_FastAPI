@@ -24,7 +24,7 @@ import { DataService } from '../../core/data.service';
           <table class="tbl">
             <thead><tr><th>#</th><th>Cliente</th><th>Tipo</th><th>Asunto</th><th>Canal</th><th>Estado</th></tr></thead>
             <tbody>
-              @for (r of data.reclamos; track r.codigo) {
+              @for (r of data.getReclamos(); track r.codigo) {
                 <tr>
                   <td><b>{{ r.codigo }}</b></td>
                   <td>{{ r.cliente }}<div class="muted small">{{ r.fecha }}</div></td>
@@ -67,5 +67,5 @@ import { DataService } from '../../core/data.service';
 export class Reclamos {
   data = inject(DataService);
   ok = false;
-  porEstado(e: string) { return this.data.reclamos.filter(r => r.estado === e).length; }
+  porEstado(e: string) { return this.data.getReclamos().filter(r => r.estado === e).length; }
 }

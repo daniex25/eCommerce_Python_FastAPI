@@ -51,8 +51,8 @@ export class Fefo {
   data = inject(DataService);
   msg = '';
   dias(l: Lote) { return this.data.diasParaVencer(l.fechaVencimiento); }
-  alertaRoja() { return this.data.lotes.filter(l => l.estado !== 'Cuarentena' && this.dias(l) < 90).sort((a, b) => this.dias(a) - this.dias(b)); }
-  vencidos() { return this.data.lotes.filter(l => this.dias(l) < 0); }
+  alertaRoja() { return this.data.getLotes().filter(l => l.estado !== 'Cuarentena' && this.dias(l) < 90).sort((a, b) => this.dias(a) - this.dias(b)); }
+  vencidos() { return this.data.getLotes().filter(l => this.dias(l) < 0); }
   stockComprometido() { return this.alertaRoja().reduce((s, l) => s + l.stockDisponible, 0); }
   cuarentena(l: Lote) { l.estado = 'Cuarentena'; this.msg = `Lote ${l.numeroLote} enviado a cuarentena. Stock retirado de la venta y notificado al Químico Farmacéutico.`; }
 }

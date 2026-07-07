@@ -16,7 +16,7 @@ import { DataService } from '../../core/data.service';
           <table class="tbl">
             <thead><tr><th>RUC</th><th>Razón social</th><th>Teléfono</th></tr></thead>
             <tbody>
-              @for (p of data.proveedores; track p.rucProveedor) {
+              @for (p of data.getProveedores(); track p.rucProveedor) {
                 <tr><td>{{ p.rucProveedor }}</td><td><b>{{ p.razonSocial }}</b><div class="muted small">{{ p.correoElectronico }}</div></td><td>{{ p.telefono }}</td></tr>
               }
             </tbody>
@@ -30,7 +30,7 @@ import { DataService } from '../../core/data.service';
           <table class="tbl">
             <thead><tr><th>N° OC</th><th>Proveedor</th><th>Fecha</th><th class="num">Monto</th><th>Estado</th></tr></thead>
             <tbody>
-              @for (o of data.ordenes; track o.numeroOrden) {
+              @for (o of data.getOrdenes(); track o.numeroOrden) {
                 <tr>
                   <td><b>#{{ o.numeroOrden }}</b></td>
                   <td>{{ o.proveedor }}</td>

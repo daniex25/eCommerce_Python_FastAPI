@@ -79,7 +79,7 @@ export class Recepcion {
   lotes: string[] = [];
   vence: string[] = [];
   ok = false;
-  pendientes() { return this.data.ordenes.filter(o => o.estado === 'Pendiente'); }
+  pendientes() { return this.data.getOrdenes().filter(o => o.estado === 'Pendiente'); }
   elegir(o: OrdenCompra) { this.sel = o; this.lotes = []; this.vence = []; this.ok = false; }
   completo() { const n = this.sel?.detalle?.length || 0; return n > 0 && this.lotes.filter(Boolean).length === n && this.vence.filter(Boolean).length === n; }
   confirmar() { if (this.completo()) this.ok = true; }

@@ -56,5 +56,5 @@ import { EstadoPedido } from '../../core/models';
 export class MisCompras {
   data = inject(DataService);
   estadoColor: Record<EstadoPedido, string> = {} as any;
-  pedidosCliente() { return this.data.pedidos.filter(p => p.codigoCliente === 1); }
+  pedidosCliente() { return this.data.getPedidos().filter(p => p.codigoCliente === 1); }
 }

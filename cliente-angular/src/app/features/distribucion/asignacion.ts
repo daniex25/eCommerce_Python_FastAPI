@@ -44,7 +44,7 @@ import { DataService } from '../../core/data.service';
 
       <aside class="card">
         <h3>Repartidores</h3>
-        @for (r of data.repartidores; track r.codigoRepartidor) {
+        @for (r of data.getRepartidores(); track r.codigoRepartidor) {
           <div class="rep">
             <div class="ava">{{ iniciales(r.nombre) }}</div>
             <div style="flex:1"><b>{{ r.nombre }}</b><div class="muted small">{{ r.vehiculo }}</div></div>
@@ -68,8 +68,8 @@ export class Asignacion {
   data = inject(DataService);
   asignados: Record<number, number | undefined> = { 1042: 1 };
   msg = '';
-  porDespachar() { return this.data.pedidos.filter(p => p.estadoPedido === 'Pagado' || p.estadoPedido === 'Preparado'); }
-  disponibles() { return this.data.repartidores.filter(r => r.estado); }
+  porDespachar() { return this.data.getPedidos().filter(p => p.estadoPedido === 'Pagado' || p.estadoPedido === 'Preparado'); }
+  disponibles() { return this.data.getRepartidores().filter(r => r.estado); }
   totalAsignados() { return Object.values(this.asignados).filter(v => v !== undefined).length; }
   iniciales(n: string) { return n.split(' ').slice(0, 2).map(x => x[0]).join(''); }
   notificar() { this.msg = `${this.totalAsignados()} pedido(s) asignado(s). Se notificó a los repartidores vía la app móvil.`; }

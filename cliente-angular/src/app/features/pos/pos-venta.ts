@@ -112,13 +112,13 @@ export class PosVenta {
   comp = 'Boleta';
   pago = 'Efectivo';
   lineas: Linea[] = [
-    { producto: this.data.productos[0], cantidad: 2 },
-    { producto: this.data.productos[4], cantidad: 1 },
+    { producto: this.data.getProductos()[0], cantidad: 2 },
+    { producto: this.data.getProductos()[4], cantidad: 1 },
   ];
 
   filtrados() {
     const q = this.q.toLowerCase();
-    return this.data.productos.filter(p => !q || p.nombreProducto.toLowerCase().includes(q) || String(p.codigoProducto) === q);
+    return this.data.getProductos().filter(p => !q || p.nombreProducto.toLowerCase().includes(q) || String(p.codigoProducto) === q);
   }
   add(p: Producto) {
     const l = this.lineas.find(x => x.producto.codigoProducto === p.codigoProducto);

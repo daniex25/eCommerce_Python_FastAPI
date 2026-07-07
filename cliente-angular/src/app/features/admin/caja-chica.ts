@@ -66,7 +66,7 @@ export class CajaChica {
   monto = 0;
   responsable = '';
   ok = false;
-  egresos() { return this.data.movimientosCaja.filter(m => m.tipo === 'Egreso'); }
+  egresos() { return this.data.getMovimientos().filter(m => m.tipo === 'Egreso'); }
   totalEgresos() { return this.egresos().reduce((s, m) => s + m.monto, 0) + 39.50; }
   saldo() { return 300 - this.totalEgresos(); }
   registrar() { this.ok = true; }

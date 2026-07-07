@@ -41,5 +41,5 @@ import { DataService } from '../../core/data.service';
 export class Lotes {
   data = inject(DataService);
   dias(l: any) { return this.data.diasParaVencer(l.fechaVencimiento); }
-  ordenados() { return [...this.data.lotes].sort((a, b) => +new Date(a.fechaVencimiento) - +new Date(b.fechaVencimiento)); }
+  ordenados() { return [...this.data.getLotes()].sort((a, b) => +new Date(a.fechaVencimiento) - +new Date(b.fechaVencimiento)); }
 }

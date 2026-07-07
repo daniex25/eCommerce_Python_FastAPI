@@ -71,10 +71,10 @@ export class Caja {
   data = inject(DataService);
   fondoInicial = 100.00;
   contado = 158.30;
-  efectivo() { return this.data.movimientosCaja.filter(m => m.tipo === 'Ingreso' && m.metodo === 'Efectivo').reduce((s, m) => s + m.monto, 0); }
-  digital() { return this.data.movimientosCaja.filter(m => m.tipo === 'Ingreso' && (m.metodo === 'Yape' || m.metodo === 'Plin')).reduce((s, m) => s + m.monto, 0); }
-  tarjeta() { return this.data.movimientosCaja.filter(m => m.tipo === 'Ingreso' && m.metodo === 'Tarjeta').reduce((s, m) => s + m.monto, 0); }
-  egresos() { return this.data.movimientosCaja.filter(m => m.tipo === 'Egreso').reduce((s, m) => s + m.monto, 0); }
+  efectivo() { return this.data.getMovimientos().filter(m => m.tipo === 'Ingreso' && m.metodo === 'Efectivo').reduce((s, m) => s + m.monto, 0); }
+  digital() { return this.data.getMovimientos().filter(m => m.tipo === 'Ingreso' && (m.metodo === 'Yape' || m.metodo === 'Plin')).reduce((s, m) => s + m.monto, 0); }
+  tarjeta() { return this.data.getMovimientos().filter(m => m.tipo === 'Ingreso' && m.metodo === 'Tarjeta').reduce((s, m) => s + m.monto, 0); }
+  egresos() { return this.data.getMovimientos().filter(m => m.tipo === 'Egreso').reduce((s, m) => s + m.monto, 0); }
   esperado() { return this.fondoInicial + this.efectivo() - this.egresos(); }
   diferencia() { return +(+this.contado - this.esperado()).toFixed(2); }
   cerrado = false;

@@ -42,7 +42,7 @@ import { DataService } from '../../core/data.service';
           <table class="tbl">
             <thead><tr><th>Código</th><th>Cliente</th><th class="num">Dcto</th><th>Vence</th><th>Estado</th></tr></thead>
             <tbody>
-              @for (c of data.cupones; track c.codigo) {
+              @for (c of data.getCupones(); track c.codigo) {
                 <tr>
                   <td><b>{{ c.codigo }}</b><div class="muted small">{{ c.motivo }}</div></td>
                   <td>{{ c.cliente }}</td>

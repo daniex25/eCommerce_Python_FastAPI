@@ -29,14 +29,14 @@ import { Producto } from '../../core/models';
           <label>Categoría</label>
           <select class="inp" [(ngModel)]="cat">
             <option value="">Todas</option>
-            @for (c of data.categorias; track c.codigoCategoria) { <option [value]="c.nombre">{{ c.nombre }}</option> }
+            @for (c of data.getCategorias(); track c.codigoCategoria) { <option [value]="c.nombre">{{ c.nombre }}</option> }
           </select>
         </div>
         <div class="field">
           <label>Laboratorio</label>
           <select class="inp" [(ngModel)]="lab">
             <option value="">Todos</option>
-            @for (l of data.laboratorios; track l.codigoLaboratorio) { <option [value]="l.nombre">{{ l.nombre }}</option> }
+            @for (l of data.getLaboratorios(); track l.codigoLaboratorio) { <option [value]="l.nombre">{{ l.nombre }}</option> }
           </select>
         </div>
         <div class="field">
@@ -100,7 +100,7 @@ export class Catalogo {
 
   filtrados(): Producto[] {
     const q = this.q.toLowerCase();
-    return this.data.productos.filter(p =>
+    return this.data.getProductos().filter(p =>
       (!q || p.nombreProducto.toLowerCase().includes(q)) &&
       (!this.cat || p.categoria === this.cat) &&
       (!this.lab || p.laboratorio === this.lab) &&

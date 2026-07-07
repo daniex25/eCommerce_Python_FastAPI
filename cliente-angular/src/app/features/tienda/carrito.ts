@@ -10,14 +10,14 @@ import { DataService, IGV_RATE } from '../../core/data.service';
   <div class="page">
     <div class="page-header"><h1>Carrito de compras</h1><div class="sub">{{ data.cantidadCarrito() }} producto(s) en tu carrito</div></div>
 
-    @if (data.carrito().length > 0) {
+    @if (data.getCarrito().length > 0) {
     <div class="car-grid">
       <div class="card card-pad-0">
         <div class="table-wrap" style="border:none">
           <table class="tbl">
             <thead><tr><th>Producto</th><th class="num">Precio</th><th class="center">Cantidad</th><th class="num">Subtotal</th><th></th></tr></thead>
             <tbody>
-              @for (i of data.carrito(); track i.producto.codigoProducto) {
+              @for (i of data.getCarrito(); track i.producto.codigoProducto) {
                 <tr>
                   <td>
                     <div class="ci"><span class="ci-img">{{ i.producto.imagen }}</span>

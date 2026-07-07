@@ -60,7 +60,7 @@ import { DataService, IGV_RATE } from '../../core/data.service';
 
       <aside class="card resumen">
         <h3>Resumen del pedido</h3>
-        @for (i of data.carrito(); track i.producto.codigoProducto) {
+        @for (i of data.getCarrito(); track i.producto.codigoProducto) {
           <div class="r-item"><span>{{ i.cantidad }}× {{ i.producto.nombreProducto }}</span><b>S/ {{ (i.producto.precioVenta*i.cantidad).toFixed(2) }}</b></div>
         }
         <hr>

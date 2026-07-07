@@ -13,7 +13,7 @@ import { RecetaMedica } from '../../core/models';
     <div class="rec-grid">
       <aside class="card card-pad-0">
         <div class="flex between" style="padding:1rem 1.25rem; border-bottom:1px solid #f1f5f9"><b>Bandeja</b><span class="badge badge-amber">{{ pendientes().length }} pendientes</span></div>
-        @for (r of data.recetas; track r.numeroReceta) {
+        @for (r of data.getRecetas(); track r.numeroReceta) {
           <button class="ri" [class.on]="sel?.numeroReceta===r.numeroReceta" (click)="sel=r">
             <div class="flex between"><b>Receta #{{ r.numeroReceta }}</b>
               @switch (r.estado) {
@@ -82,6 +82,6 @@ import { RecetaMedica } from '../../core/models';
 })
 export class Recetas {
   data = inject(DataService);
-  sel?: RecetaMedica = this.data.recetas[0];
-  pendientes() { return this.data.recetas.filter(r => r.estado === 'Pendiente'); }
+  sel?: RecetaMedica = this.data.getRecetas()[0];
+  pendientes() { return this.data.getRecetas().filter(r => r.estado === 'Pendiente'); }
 }

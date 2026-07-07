@@ -198,7 +198,8 @@ export class DataService {
   getVentasSemana() { return this.ventasSemana; }
 
 
-
+  getCarrito() { return this.carrito(); }
+  getLaboratorios() { return this.laboratorios; }
 
 
 

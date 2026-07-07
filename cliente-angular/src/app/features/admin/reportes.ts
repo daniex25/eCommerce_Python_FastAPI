@@ -38,7 +38,7 @@ import { DataService } from '../../core/data.service';
 
       <div class="card">
         <h3>Productos más vendidos</h3>
-        @for (p of data.topVendidos; track p.nombre) {
+        @for (p of data.getTopVendidos(); track p.nombre) {
           <div class="top">
             <div class="flex between"><b class="t-name">{{ p.nombre }}</b><span class="muted small">{{ p.unidades }} und · S/ {{ p.ingresos.toFixed(0) }}</span></div>
             <div class="t-bar"><div [style.width.%]="topPct(p.unidades)"></div></div>

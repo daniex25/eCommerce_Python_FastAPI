@@ -11,7 +11,7 @@ import { DataService } from '../../core/data.service';
     <div class="page-header"><h1>Consulta de inventario</h1><div class="sub">Stock actual por producto · Sede Huacho</div></div>
 
     <div class="stats mb">
-      <div class="stat"><div class="label">Productos</div><div class="value">{{ data.productos.length }}</div></div>
+      <div class="stat"><div class="label">Productos</div><div class="value">{{ data.getProductos().length }}</div></div>
       <div class="stat"><div class="label">Stock total (und)</div><div class="value">{{ stockTotal() }}</div></div>
       <div class="stat"><div class="label">Bajo mínimo</div><div class="value" style="color:#d97706">{{ bajos() }}</div></div>
       <div class="stat"><div class="label">Agotados</div><div class="value" style="color:#dc2626">{{ agotados() }}</div></div>
@@ -21,7 +21,7 @@ import { DataService } from '../../core/data.service';
       <div class="flex between" style="padding:1rem 1.25rem">
         <div class="flex">
           <input class="inp" style="width:260px" [(ngModel)]="q" placeholder="🔍 Buscar producto…" />
-          <select class="inp" [(ngModel)]="cat" style="width:200px"><option value="">Todas las categorías</option>@for(c of data.categorias; track c.codigoCategoria){<option [value]="c.nombre">{{c.nombre}}</option>}</select>
+          <select class="inp" [(ngModel)]="cat" style="width:200px"><option value="">Todas las categorías</option>@for(c of data.getCategorias(); track c.codigoCategoria){<option [value]="c.nombre">{{c.nombre}}</option>}</select>
         </div>
         <button class="btn btn-outline btn-sm">⬇ Exportar Excel</button>
       </div>
@@ -56,9 +56,9 @@ export class Inventario {
   cat = '';
   filtrados() {
     const q = this.q.toLowerCase();
-    return this.data.productos.filter(p => (!q || p.nombreProducto.toLowerCase().includes(q)) && (!this.cat || p.categoria === this.cat));
+    return this.data.getProductos().filter(p => (!q || p.nombreProducto.toLowerCase().includes(q)) && (!this.cat || p.categoria === this.cat));
   }
-  stockTotal() { return this.data.productos.reduce((s, p) => s + p.stockDisponible, 0); }
-  bajos() { return this.data.productos.filter(p => p.stockDisponible > 0 && p.stockDisponible <= (p.stockMinimo || 0)).length; }
-  agotados() { return this.data.productos.filter(p => p.stockDisponible === 0).length; }
+  stockTotal() { return this.data.getProductos().reduce((s, p) => s + p.stockDisponible, 0); }
+  bajos() { return this.data.getProductos().filter(p => p.stockDisponible > 0 && p.stockDisponible <= (p.stockMinimo || 0)).length; }
+  agotados() { return this.data.getProductos().filter(p => p.stockDisponible === 0).length; }
 }
