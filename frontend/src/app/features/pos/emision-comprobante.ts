@@ -1,49 +1,51 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ApiService } from '../../core/api.service';
+import { Pedido, Comprobante } from '../../core/models';
 
 @Component({
   selector: 'app-emision-comprobante',
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
   <div class="page">
-    <div class="page-header"><h1>Emisión de comprobante electrónico</h1><div class="sub">Venta #VTA-7782 · Boleta / Factura enviada a SUNAT</div></div>
+    <div class="page-header"><h1>Emisión de comprobante electrónico</h1><div class="sub">@if (pedido) { Pedido #{{ pedido.numeroPedido }} · } Boleta / Factura</div></div>
 
+    @if (!codigoPago) {
+      <div class="card center muted" style="padding:3rem">No hay una venta activa para emitir. <a routerLink="/pos/venta">Volver al POS</a></div>
+    } @else {
     <div class="emi-grid">
       <div class="card">
         <h3>Datos del comprobante</h3>
-        <div class="seg mb">
-          <button [class.on]="tipo==='Boleta'" (click)="tipo='Boleta'">Boleta de Venta</button>
-          <button [class.on]="tipo==='Factura'" (click)="tipo='Factura'">Factura</button>
-        </div>
 
-        <div class="flex">
-          <div class="field" style="flex:1">
-            <label>{{ tipo==='Factura' ? 'RUC del cliente' : 'DNI del cliente' }}</label>
-            <input class="inp" [(ngModel)]="doc" [class.invalid]="docInvalido()" [placeholder]="tipo==='Factura' ? '11 dígitos' : '8 dígitos'" maxlength="11" />
-            @if (docInvalido()) { <span class="err">{{ tipo==='Factura' ? 'El RUC debe tener 11 dígitos' : 'El DNI debe tener 8 dígitos' }}</span> }
+        @if (mensajeError) { <div class="notice notice-red mb">{{ mensajeError }}</div> }
+
+        @if (!comprobante) {
+          <div class="seg mb">
+            <button [class.on]="tipo==='Boleta'" (click)="tipo='Boleta'">Boleta de Venta</button>
+            <button [class.on]="tipo==='Factura'" (click)="tipo='Factura'">Factura</button>
           </div>
-          <div class="field" style="flex:2">
-            <label>{{ tipo==='Factura' ? 'Razón social' : 'Nombre completo' }}</label>
-            <input class="inp" [(ngModel)]="nombre" />
+
+          <div class="flex">
+            <div class="field" style="flex:1">
+              <label>{{ tipo==='Factura' ? 'RUC del cliente' : 'DNI del cliente' }}</label>
+              <input class="inp" [(ngModel)]="doc" [class.invalid]="docInvalido()" [placeholder]="tipo==='Factura' ? '11 dígitos' : '8 dígitos'" maxlength="11" />
+              @if (docInvalido()) { <span class="err">{{ tipo==='Factura' ? 'El RUC debe tener 11 dígitos' : 'El DNI debe tener 8 dígitos' }}</span> }
+            </div>
+            <div class="field" style="flex:2">
+              <label>{{ tipo==='Factura' ? 'Razón social' : 'Nombre completo' }}</label>
+              <input class="inp" [(ngModel)]="nombre" />
+            </div>
           </div>
-        </div>
 
-        <div class="flex">
-          <div class="field" style="flex:1"><label>Serie</label><input class="inp" [value]="tipo==='Factura' ? 'F001' : 'B001'" readonly /></div>
-          <div class="field" style="flex:1"><label>Correlativo</label><input class="inp" value="00004523" readonly /></div>
-          <div class="field" style="flex:1"><label>Fecha de emisión</label><input class="inp" value="2026-06-18" readonly /></div>
-        </div>
-
-        <div class="field"><label>Enviar copia al correo</label><input class="inp" [(ngModel)]="correo" placeholder="cliente@correo.com" /></div>
-
-        <div class="flex mt">
-          <button class="btn btn-primary" (click)="emitir()">📤 Emitir y enviar a SUNAT</button>
-          <button class="btn btn-outline">🖨️ Imprimir</button>
-          <button class="btn btn-outline">✉️ Enviar por correo</button>
-        </div>
-        @if (emitido) { <div class="notice notice-green mt">✓ Comprobante <b>{{ tipo==='Factura'?'F001':'B001' }}-00004523</b> emitido. Estado SUNAT: <b>Aceptado</b>.</div> }
+          <div class="flex mt">
+            <button class="btn btn-primary" [disabled]="cargando" (click)="emitir()">📤 {{ cargando ? 'Emitiendo…' : 'Emitir y enviar a SUNAT' }}</button>
+          </div>
+        } @else {
+          <div class="notice notice-green mt">✓ Comprobante <b>{{ comprobante.numeroComprobante }}</b> emitido. Estado SUNAT: <b>{{ comprobante.estadoSunat }}</b>.</div>
+          <a routerLink="/pos/venta" class="btn btn-outline mt">‹ Nueva venta</a>
+        }
       </div>
 
       <div class="card recibo">
@@ -51,29 +53,31 @@ import { RouterLink } from '@angular/router';
           <div class="logo">✚</div>
           <div><b>BOTICA CENTRAL</b><div class="muted small">RUC 20512345678</div><div class="muted small">Av. Grau 521, Huacho — Huaura</div></div>
         </div>
-        <div class="rc-tipo">{{ tipo === 'Factura' ? 'FACTURA ELECTRÓNICA' : 'BOLETA DE VENTA ELECTRÓNICA' }}<br><b>{{ tipo==='Factura'?'F001':'B001' }}-00004523</b></div>
+        <div class="rc-tipo">{{ tipo === 'Factura' ? 'FACTURA ELECTRÓNICA' : 'BOLETA DE VENTA ELECTRÓNICA' }}<br><b>{{ comprobante?.numeroComprobante || (tipo==='Factura'?'F001':'B001') + '-••••••••' }}</b></div>
         <div class="rc-cli">
           <div><span class="muted small">{{ tipo==='Factura'?'RUC':'DNI' }}:</span> {{ doc || '—' }}</div>
           <div><span class="muted small">Cliente:</span> {{ nombre || '—' }}</div>
-          <div><span class="muted small">Fecha:</span> 18/06/2026 11:42</div>
         </div>
         <table class="rc-tbl">
           <tr><th>Cant.</th><th>Descripción</th><th class="num">Importe</th></tr>
-          <tr><td>2</td><td>Paracetamol 500mg</td><td class="num">17.00</td></tr>
-          <tr><td>1</td><td>Ibuprofeno 400mg</td><td class="num">9.90</td></tr>
+          @for (d of pedido?.detalle; track d.codigoProducto) {
+            <tr><td>{{ d.cantidad }}</td><td>{{ d.nombreProducto }}</td><td class="num">{{ d.subtotal.toFixed(2) }}</td></tr>
+          }
         </table>
         <div class="rc-tot">
-          <div class="flex between"><span>Op. Gravada</span><b>S/ 22.80</b></div>
-          <div class="flex between"><span>IGV (18%)</span><b>S/ 4.10</b></div>
-          <div class="flex between gtot"><span>TOTAL</span><b>S/ 26.90</b></div>
+          <div class="flex between"><span>Op. Gravada</span><b>S/ {{ (comprobante?.subtotal ?? 0).toFixed(2) }}</b></div>
+          <div class="flex between"><span>IGV (18%)</span><b>S/ {{ (comprobante?.igv ?? 0).toFixed(2) }}</b></div>
+          <div class="flex between gtot"><span>TOTAL</span><b>S/ {{ (comprobante?.total ?? pedido?.montoTotal ?? 0).toFixed(2) }}</b></div>
         </div>
         <div class="rc-foot">
           <div class="qr">▦▦<br>▦▦</div>
-          <div class="muted small">Representación impresa del comprobante electrónico. Autorizado mediante Resolución SUNAT. <span class="sunat">✓ Aceptado por SUNAT</span></div>
+          <div class="muted small">Representación impresa del comprobante electrónico.
+            @if (comprobante) { <span class="sunat">{{ comprobante.estadoSunat === 'Aceptado' ? '✓ Aceptado por SUNAT' : 'Estado SUNAT: ' + comprobante.estadoSunat }}</span> }
+          </div>
         </div>
-        <a routerLink="/pos/venta" class="btn btn-ghost btn-sm mt">‹ Nueva venta</a>
       </div>
     </div>
+    }
   </div>
   `,
   styles: [`
@@ -99,14 +103,49 @@ import { RouterLink } from '@angular/router';
   `],
 })
 export class EmisionComprobante {
+  private api = inject(ApiService);
+  private route = inject(ActivatedRoute);
+
+  codigoPago?: number;
+  pedido?: Pedido;
+  comprobante?: Comprobante;
+
   tipo: 'Boleta' | 'Factura' = 'Boleta';
-  doc = '45872136';
-  nombre = 'María Elena Quispe Huamán';
-  correo = 'maria.quispe@gmail.com';
-  emitido = false;
+  doc = '';
+  nombre = '';
+  cargando = false;
+  mensajeError = '';
+
+  constructor() {
+    const pago = Number(this.route.snapshot.queryParamMap.get('pago'));
+    const pedido = Number(this.route.snapshot.queryParamMap.get('pedido'));
+    this.codigoPago = pago || undefined;
+
+    if (pedido) {
+      this.api.getPedido(pedido).subscribe({ next: (p) => this.pedido = p, error: () => {} });
+    }
+  }
+
   docInvalido() {
     const len = this.doc.replace(/\D/g, '').length;
     return this.tipo === 'Factura' ? len !== 11 : len !== 8;
   }
-  emitir() { if (!this.docInvalido()) this.emitido = true; }
+
+  emitir() {
+    if (this.docInvalido() || !this.codigoPago || this.cargando) return;
+    this.mensajeError = '';
+    this.cargando = true;
+    this.api.emitirComprobante({
+      codigoPago: this.codigoPago,
+      tipoComprobante: this.tipo,
+      documentoCliente: this.doc,
+      nombreCliente: this.nombre,
+    }).subscribe({
+      next: (comprobante) => { this.comprobante = comprobante; this.cargando = false; },
+      error: (err) => {
+        this.cargando = false;
+        this.mensajeError = err?.error?.detail || 'No se pudo emitir el comprobante.';
+      },
+    });
+  }
 }

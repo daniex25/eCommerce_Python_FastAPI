@@ -5,8 +5,12 @@ import {
   MovimientoCaja, ProductoVendido,
 } from './models';
 import { ApiService } from './api.service';
+import { AuthService } from './auth.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { environment } from '../../environments/environment';
+
+const ROLES_ALMACEN = ['Administrador', 'Encargado de Almacén', 'Administrador del Sistema', 'Químico Farmacéutico', 'Técnico de Farmacia'];
+const ROLES_ADMINISTRACION = ['Administrador', 'Administrador del Sistema'];
 
 
 export const IGV_RATE = 0.18;
@@ -15,6 +19,7 @@ export const IGV_RATE = 0.18;
 export class DataService {
 
   private api = inject(ApiService);
+  private auth = inject(AuthService);
 
   private categorias: Categoria[] = [
     { codigoCategoria: 1, nombre: 'Medicamentos', descripcion: 'De marca y genéricos' },
@@ -97,10 +102,10 @@ export class DataService {
     { codigoEntrega: 4, numeroPedido: 1046, cliente: 'Carmen Rosa Díaz', direccionEntrega: 'Urb. Santa Rosa Mz B Lt 14', distrito: 'Santa María', estadoEntrega: 'Por Asignar' },
   ];
   private recetas: RecetaMedica[] = [
-    { numeroReceta: 501, numeroPedido: 1047, nombrePaciente: 'María Elena Quispe Huamán', medicoTratante: 'Dr. Hugo Ramírez Paz', cmp: 'CMP 45821', fechaEmision: '2026-06-17', estado: 'Pendiente', producto: 'Amoxicilina 500mg x21', icono: 'fa-file-medical' },
-    { numeroReceta: 502, numeroPedido: 1048, nombrePaciente: 'José Carlos Ramírez Torres', medicoTratante: 'Dra. Ana Lucía Vega', cmp: 'CMP 38112', fechaEmision: '2026-06-18', estado: 'Pendiente', producto: 'Azitromicina 500mg x3', icono: 'fa-file-medical' },
-    { numeroReceta: 503, numeroPedido: 1049, nombrePaciente: 'Carmen Rosa Díaz Salazar', medicoTratante: 'Dr. Hugo Ramírez Paz', cmp: 'CMP 45821', fechaEmision: '2026-06-16', estado: 'Aprobada', producto: 'Amoxicilina 500mg x21', icono: 'fa-file-medical' },
-    { numeroReceta: 500, numeroPedido: 1040, nombrePaciente: 'Luis Alberto Vargas Mendoza', medicoTratante: 'Dr. Pablo Ñañez', cmp: 'CMP 51200', fechaEmision: '2026-06-12', estado: 'Rechazada', producto: 'Receta ilegible', icono: 'fa-file-medical' },
+    { numeroReceta: 501, numeroPedido: 1047, codigoProducto: 3, nombrePaciente: 'María Elena Quispe Huamán', medicoTratante: 'Dr. Hugo Ramírez Paz', cmpMedico: 'CMP 45821', fechaEmision: '2026-06-17', estado: 'Pendiente', producto: 'Amoxicilina 500mg x21', icono: 'fa-file-medical' },
+    { numeroReceta: 502, numeroPedido: 1048, codigoProducto: 4, nombrePaciente: 'José Carlos Ramírez Torres', medicoTratante: 'Dra. Ana Lucía Vega', cmpMedico: 'CMP 38112', fechaEmision: '2026-06-18', estado: 'Pendiente', producto: 'Azitromicina 500mg x3', icono: 'fa-file-medical' },
+    { numeroReceta: 503, numeroPedido: 1049, codigoProducto: 3, nombrePaciente: 'Carmen Rosa Díaz Salazar', medicoTratante: 'Dr. Hugo Ramírez Paz', cmpMedico: 'CMP 45821', fechaEmision: '2026-06-16', estado: 'Aprobada', producto: 'Amoxicilina 500mg x21', icono: 'fa-file-medical' },
+    { numeroReceta: 500, numeroPedido: 1040, codigoProducto: null, nombrePaciente: 'Luis Alberto Vargas Mendoza', medicoTratante: 'Dr. Pablo Ñañez', cmpMedico: 'CMP 51200', fechaEmision: '2026-06-12', estado: 'Rechazada', producto: 'Receta ilegible', icono: 'fa-file-medical' },
   ];
   private comprobantes: Comprobante[] = [
     { numeroComprobante: 'B001-00004521', codigoPago: 1, tipoComprobante: 'Boleta', fechaEmision: '2026-06-18', subtotal: 54.58, igv: 9.82, total: 64.40, documentoCliente: '45872136', nombreCliente: 'María Elena Quispe Huamán', estadoSunat: 'Aceptado' },
@@ -157,11 +162,11 @@ export class DataService {
     { dia: 'Dom', web: 1150, fisica: 1620 },
   ];
   // ── Carrito reactivo (compartido tienda) ──
-  private carrito = signal<ItemCarrito[]>([
-    { producto: this.productos[0], cantidad: 2 },
-    { producto: this.productos[12], cantidad: 1 },
-    { producto: this.productos[15], cantidad: 1 },
-  ]);
+  // Vive solo en el frontend (ver sección 6.7 del plan de corrección): se
+  // persiste recién al hacer checkout. Empieza vacío porque, con el
+  // backend real, los `codigoProducto` de una sesión demo no siempre
+  // coinciden con los IDs autoincrementales que asignó el seed.
+  private carrito = signal<ItemCarrito[]>([]);
 
   private categoriasSignal = signal<Categoria[]>(this.categorias);
   private productosSignal = signal<Producto[]>(this.productos);
@@ -207,12 +212,16 @@ export class DataService {
   cantidadCarrito = computed(() => this.carrito().reduce((s, i) => s + i.cantidad, 0));
   subtotalCarrito = computed(() => this.carrito().reduce((s, i) => s + i.producto.precioVenta * i.cantidad, 0));
 
-  agregarAlCarrito(producto: Producto, cantidad = 1) {
+  agregarAlCarrito(producto: Producto, cantidad = 1, numeroReceta?: number) {
     const items = [...this.carrito()];
     const idx = items.findIndex(i => i.producto.codigoProducto === producto.codigoProducto);
-    if (idx >= 0) items[idx] = { ...items[idx], cantidad: items[idx].cantidad + cantidad };
-    else items.push({ producto, cantidad });
+    if (idx >= 0) items[idx] = { ...items[idx], cantidad: items[idx].cantidad + cantidad, numeroReceta: numeroReceta ?? items[idx].numeroReceta };
+    else items.push({ producto, cantidad, numeroReceta });
     this.carrito.set(items);
+  }
+
+  vaciarCarrito() {
+    this.carrito.set([]);
   }
 
   cambiarCantidad(codigoProducto: number, cantidad: number) {
@@ -247,50 +256,82 @@ export class DataService {
     }
   }
 
+  // Ícono FontAwesome por categoría (Fase 0.5). El backend no guarda el
+  // ícono del producto (es una decisión puramente visual del frontend),
+  // así que se resuelve aquí por nombre de categoría al cargar datos reales.
+  private static ICONO_POR_CATEGORIA: Record<string, string> = {
+    'Medicamentos': 'fa-pills',
+    'Dispositivos Médicos': 'fa-stethoscope',
+    'Dermocosmética': 'fa-pump-soap',
+    'Infantil': 'fa-baby',
+    'Vitaminas y Suplementos': 'fa-capsules',
+    'Bioseguridad e Higiene': 'fa-hand-sparkles',
+  };
+
+  private enriquecerProducto(p: Producto, categorias: Categoria[], laboratorios: Laboratorio[]): Producto {
+    const categoria = categorias.find(c => c.codigoCategoria === p.codigoCategoria)?.nombre;
+    const laboratorio = laboratorios.find(l => l.codigoLaboratorio === p.codigoLaboratorio)?.nombre;
+    return {
+      ...p,
+      categoria,
+      laboratorio,
+      icono: categoria ? DataService.ICONO_POR_CATEGORIA[categoria] ?? 'fa-capsules' : 'fa-capsules',
+    };
+  }
+
   private cargarDatosDesdeBackend() {
-    // Productos
-    this.api.getProductos().subscribe({
-      next: (data) => this.productosSignal.set(data),
-      error: (err) => console.error('Error al cargar productos:', err)
-    });
-
-    // Categorías
+    // Categorías y laboratorios primero: productos los necesita para
+    // resolver `categoria`/`laboratorio`/`icono` (campos "solo frontend").
     this.api.getCategorias().subscribe({
-      next: (data) => this.categoriasSignal.set(data),
-      error: (err) => console.error('Error al cargar categorías:', err)
+      next: (categorias) => {
+        this.categoriasSignal.set(categorias);
+        this.api.getLaboratorios().subscribe({
+          next: (laboratorios) => {
+            this.laboratorios = laboratorios;
+            this.api.getProductos().subscribe({
+              next: (productos) => this.productosSignal.set(
+                productos.map(p => this.enriquecerProducto(p, categorias, laboratorios))
+              ),
+              error: (err) => console.error('Error al cargar productos:', err),
+            });
+          },
+          error: (err) => console.error('Error al cargar laboratorios:', err),
+        });
+      },
+      error: (err) => console.error('Error al cargar categorías:', err),
     });
 
-    // Pedidos
-    this.api.getPedidos().subscribe({
-      next: (data) => this.pedidosSignal.set(data),
-      error: (err) => console.error('Error al cargar pedidos:', err)
-    });
+    // Pedidos y recetas: cualquier sesión iniciada puede pedirlos (el
+    // backend ya filtra a "los míos" para el rol Cliente, RS0028). Lotes y
+    // Clientes sí están restringidos a personal específico — pedirlos sin
+    // el rol adecuado solo generaría 403 en consola en cada login.
+    const rol = this.auth.usuarioActual()?.rol;
+    if (rol) {
+      this.api.getPedidos().subscribe({
+        next: (data) => this.pedidosSignal.set(data),
+        error: (err) => console.error('Error al cargar pedidos:', err)
+      });
+      this.api.getRecetas().subscribe({
+        next: (data) => this.recetasSignal.set(data),
+        error: (err) => console.error('Error al cargar recetas:', err)
+      });
+    }
 
-    // Lotes
-    this.api.getLotes().subscribe({
-      next: (data) => this.lotesSignal.set(data),
-      error: (err) => console.error('Error al cargar lotes:', err)
-    });
+    if (rol && ROLES_ALMACEN.includes(rol)) {
+      this.api.getLotes().subscribe({
+        next: (data) => this.lotesSignal.set(data),
+        error: (err) => console.error('Error al cargar lotes:', err)
+      });
+    }
 
-    // Clientes
-    this.api.getClientes().subscribe({
-      next: (data) => this.clientesSignal.set(data),
-      error: (err) => console.error('Error al cargar clientes:', err)
-    });
+    if (rol && ROLES_ADMINISTRACION.includes(rol)) {
+      this.api.getClientes().subscribe({
+        next: (data) => this.clientesSignal.set(data),
+        error: (err) => console.error('Error al cargar clientes:', err)
+      });
+    }
 
-    // Repartidores (si existe endpoint)
-    // this.api.getRepartidores().subscribe(...)
-
-    // Entregas (si existe endpoint)
-    // this.api.getEntregas().subscribe(...)
-
-    // Recetas (si existe endpoint)
-    // this.api.getRecetas().subscribe(...)
-
-    // Comprobantes (si existe endpoint)
-    // this.api.getComprobantes().subscribe(...)
-
-    // Top productos (si existe endpoint)
-    // this.api.getTopProductos().subscribe(...)
+    // Repartidores, Entregas, Comprobantes y Top productos: sin endpoint
+    // de listado propio para estos casos de uso todavía (Fase 4 y 5).
   }
 }

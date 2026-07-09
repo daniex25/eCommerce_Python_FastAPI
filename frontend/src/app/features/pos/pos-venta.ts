@@ -1,15 +1,16 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { DataService, IGV_RATE } from '../../core/data.service';
+import { ApiService, RecetaInlinePOS } from '../../core/api.service';
 import { Producto } from '../../core/models';
 
-interface Linea { producto: Producto; cantidad: number; }
+interface Linea { producto: Producto; cantidad: number; receta?: RecetaInlinePOS; }
 
 @Component({
   selector: 'app-pos-venta',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   template: `
   <div class="pos">
     <div class="pos-left">
@@ -20,9 +21,10 @@ interface Linea { producto: Producto; cantidad: number; }
       </div>
       <div class="pos-prods">
         @for (p of filtrados(); track p.codigoProducto) {
-          <button class="pp" [disabled]="p.stockDisponible===0" (click)="add(p)">
+          <button class="pp" [disabled]="p.stockDisponible===0" (click)="alSeleccionar(p)">
             <span class="pp-img"><i class="fa-solid {{ p.icono }}"></i></span>
             <span class="pp-name">{{ p.nombreProducto }}</span>
+            @if (p.condicionVenta === 'Bajo Receta') { <span class="badge badge-amber small">Bajo receta</span> }
             <span class="pp-price">S/ {{ p.precioVenta.toFixed(2) }}</span>
             <span class="pp-stock" [class.out]="p.stockDisponible===0">{{ p.stockDisponible===0 ? 'Agotado' : p.stockDisponible + ' und' }}</span>
           </button>
@@ -32,15 +34,31 @@ interface Linea { producto: Producto; cantidad: number; }
 
     <div class="pos-right">
       <div class="pos-top">
-        <div><b>Venta en mostrador</b><div class="muted small">Caja 01 · Téc. Farmacia J. Pérez</div></div>
-        <span class="badge badge-green">Turno mañana</span>
+        <div><b>Venta en mostrador</b><div class="muted small">Caja 01</div></div>
+        <span class="badge badge-green">Sesión activa</span>
       </div>
+
+      @if (mensajeError) { <div class="notice notice-red" style="margin:.75rem 1rem">{{ mensajeError }}</div> }
+
+      @if (productoBajoReceta; as pbr) {
+        <div class="notice notice-amber receta-inline">
+          <b>Producto de venta bajo receta: {{ pbr.nombreProducto }}</b>
+          <p class="muted small">RN1101 — registra y retén la receta física antes de continuar.</p>
+          <div class="field"><label>Nombre del paciente</label><input class="inp" [(ngModel)]="recetaForm.nombrePaciente" /></div>
+          <div class="field"><label>Médico tratante</label><input class="inp" [(ngModel)]="recetaForm.medicoTratante" /></div>
+          <div class="field"><label>Colegiatura (CMP)</label><input class="inp" [(ngModel)]="recetaForm.cmpMedico" placeholder="Opcional" /></div>
+          <div class="flex mt">
+            <button class="btn btn-primary btn-sm" [disabled]="!recetaForm.nombrePaciente || !recetaForm.medicoTratante" (click)="confirmarRecetaYAgregar()">Confirmar y agregar</button>
+            <button class="btn btn-outline btn-sm" (click)="productoBajoReceta = undefined">Cancelar</button>
+          </div>
+        </div>
+      }
 
       <div class="pos-cart">
         @if (lineas.length === 0) { <div class="empty muted">Agrega productos para iniciar la venta</div> }
         @for (l of lineas; track l.producto.codigoProducto) {
           <div class="pl">
-            <div class="pl-info"><b>{{ l.producto.nombreProducto }}</b><div class="muted small">S/ {{ l.producto.precioVenta.toFixed(2) }} c/u</div></div>
+            <div class="pl-info"><b>{{ l.producto.nombreProducto }}</b><div class="muted small">S/ {{ l.producto.precioVenta.toFixed(2) }} c/u @if (l.receta) { · receta: {{ l.receta.nombrePaciente }} }</div></div>
             <div class="qty">
               <button (click)="dec(l)">−</button><span>{{ l.cantidad }}</span><button (click)="l.cantidad=l.cantidad+1">＋</button>
             </div>
@@ -57,16 +75,14 @@ interface Linea { producto: Producto; cantidad: number; }
 
         <div class="opts">
           <div>
-            <label class="muted small">Comprobante</label>
-            <div class="seg"><button [class.on]="comp==='Boleta'" (click)="comp='Boleta'">Boleta</button><button [class.on]="comp==='Factura'" (click)="comp='Factura'">Factura</button></div>
-          </div>
-          <div>
             <label class="muted small">Método de pago</label>
             <div class="seg s4"><button [class.on]="pago==='Efectivo'" (click)="pago='Efectivo'">Efectivo</button><button [class.on]="pago==='Yape'" (click)="pago='Yape'">Yape</button><button [class.on]="pago==='Plin'" (click)="pago='Plin'">Plin</button><button [class.on]="pago==='Tarjeta'" (click)="pago='Tarjeta'">Tarjeta</button></div>
           </div>
         </div>
 
-        <a routerLink="/pos/comprobante" class="btn btn-primary btn-block btn-lg cobrar" [class.dis]="lineas.length===0"><i class="fa-solid fa-sack-dollar"></i> COBRAR · S/ {{ total().toFixed(2) }}</a>
+        <button class="btn btn-primary btn-block btn-lg cobrar" [class.dis]="lineas.length===0 || cargando" [disabled]="lineas.length===0 || cargando" (click)="cobrar()">
+          <i class="fa-solid fa-sack-dollar"></i> {{ cargando ? 'Procesando…' : 'COBRAR · S/ ' + total().toFixed(2) }}
+        </button>
       </div>
     </div>
   </div>
@@ -90,8 +106,9 @@ interface Linea { producto: Producto; cantidad: number; }
     .pp-name { font-size:.78rem; font-weight:600; line-height:1.15; min-height:32px; color:var(--text-primary); }
     .pp-price { font-weight:800; color:var(--ok); font-size:.9rem; }
     .pp-stock { font-size:.68rem; color:var(--text-secondary); } .pp-stock.out { color:var(--danger); font-weight:700; }
-    .pos-right { background:var(--glass-bg); border-left:1px solid var(--glass-border); display:flex; flex-direction:column; }
+    .pos-right { background:var(--glass-bg); border-left:1px solid var(--glass-border); display:flex; flex-direction:column; overflow-y:auto; }
     .pos-top { padding:1rem 1.25rem; border-bottom:1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:center; color:var(--text-primary); }
+    .receta-inline { margin:.75rem 1rem; }
     .pos-cart { flex:1; overflow-y:auto; padding:.75rem 1rem; }
     .empty { text-align:center; padding:2.5rem 0; color:var(--text-secondary); }
     .pl { display:grid; grid-template-columns:1fr auto auto auto; align-items:center; gap:.6rem; padding:.6rem 0; border-bottom:1px solid var(--glass-border); }
@@ -114,21 +131,42 @@ interface Linea { producto: Producto; cantidad: number; }
 })
 export class PosVenta {
   data = inject(DataService);
+  api = inject(ApiService);
+  router = inject(Router);
+
   q = '';
-  comp = 'Boleta';
-  pago = 'Efectivo';
-  lineas: Linea[] = [
-    { producto: this.data.getProductos()[0], cantidad: 2 },
-    { producto: this.data.getProductos()[4], cantidad: 1 },
-  ];
+  pago: 'Efectivo' | 'Yape' | 'Plin' | 'Tarjeta' = 'Efectivo';
+  lineas: Linea[] = [];
+  cargando = false;
+  mensajeError = '';
+
+  productoBajoReceta?: Producto;
+  recetaForm: RecetaInlinePOS = { nombrePaciente: '', medicoTratante: '', cmpMedico: '' };
 
   filtrados() {
     const q = this.q.toLowerCase();
     return this.data.getProductos().filter(p => !q || p.nombreProducto.toLowerCase().includes(q) || String(p.codigoProducto) === q);
   }
-  add(p: Producto) {
+
+  alSeleccionar(p: Producto) {
+    if (p.condicionVenta === 'Bajo Receta') {
+      this.productoBajoReceta = p;
+      this.recetaForm = { nombrePaciente: '', medicoTratante: '', cmpMedico: '' };
+      return;
+    }
+    this.add(p);
+  }
+
+  confirmarRecetaYAgregar() {
+    if (!this.productoBajoReceta) return;
+    this.add(this.productoBajoReceta, { ...this.recetaForm });
+    this.productoBajoReceta = undefined;
+  }
+
+  add(p: Producto, receta?: RecetaInlinePOS) {
     const l = this.lineas.find(x => x.producto.codigoProducto === p.codigoProducto);
-    if (l) l.cantidad++; else this.lineas.push({ producto: p, cantidad: 1 });
+    if (l) l.cantidad++;
+    else this.lineas.push({ producto: p, cantidad: 1, receta });
   }
   dec(l: Linea) { l.cantidad > 1 ? l.cantidad-- : this.quitar(l); }
   quitar(l: Linea) { this.lineas = this.lineas.filter(x => x !== l); }
@@ -136,4 +174,27 @@ export class PosVenta {
   base() { return this.sub() / (1 + IGV_RATE); }
   igv() { return this.sub() - this.base(); }
   total() { return this.sub(); }
+
+  cobrar() {
+    if (this.cargando || this.lineas.length === 0) return;
+    this.mensajeError = '';
+    this.cargando = true;
+
+    this.api.ventaPOS({
+      items: this.lineas.map(l => ({ codigoProducto: l.producto.codigoProducto, cantidad: l.cantidad, receta: l.receta })),
+      metodoPago: this.pago,
+    }).subscribe({
+      next: (respuesta) => {
+        this.cargando = false;
+        this.lineas = [];
+        this.router.navigate(['/pos/comprobante'], {
+          queryParams: { pago: respuesta.pago.codigoPago, pedido: respuesta.pedido.numeroPedido },
+        });
+      },
+      error: (err) => {
+        this.cargando = false;
+        this.mensajeError = err?.error?.detail || 'No se pudo registrar la venta. Inténtalo nuevamente.';
+      },
+    });
+  }
 }

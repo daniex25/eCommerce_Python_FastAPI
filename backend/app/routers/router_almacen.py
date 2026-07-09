@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.core.deps import require_role
 from app.db.database import get_db
@@ -130,8 +130,32 @@ def eliminar_laboratorio(codigo: int, db: Session = Depends(get_db)):
 
 # ── Productos ──────────────────────────────────────────────────────────────
 @router.get("/productos", response_model=List[ProductoResponse], tags=["Productos"])
-def listar_productos(db: Session = Depends(get_db)):
-    return db.query(Producto).all()
+def listar_productos(
+    db: Session = Depends(get_db),
+    search: Optional[str] = Query(None, description="Nombre o código del producto (RS5202)"),
+    categoria: Optional[int] = Query(None, description="codigoCategoria (RS5203)"),
+    laboratorio: Optional[int] = Query(None, description="codigoLaboratorio (RS5203)"),
+    precioMax: Optional[float] = Query(None, ge=0, description="Precio máximo (RS5203)"),
+    soloDisponibles: bool = Query(False, description="Solo productos con stock > 0"),
+):
+    """CUS102 — Consultar catálogo. Filtros combinables por nombre/código,
+    categoría, laboratorio, precio máximo y disponibilidad."""
+    consulta = db.query(Producto)
+    if search:
+        termino = search.strip()
+        if termino.isdigit():
+            consulta = consulta.filter(Producto.codigoProducto == int(termino))
+        else:
+            consulta = consulta.filter(Producto.nombreProducto.ilike(f"%{termino}%"))
+    if categoria is not None:
+        consulta = consulta.filter(Producto.codigoCategoria == categoria)
+    if laboratorio is not None:
+        consulta = consulta.filter(Producto.codigoLaboratorio == laboratorio)
+    if precioMax is not None:
+        consulta = consulta.filter(Producto.precioVenta <= precioMax)
+    if soloDisponibles:
+        consulta = consulta.filter(Producto.stockDisponible > 0)
+    return consulta.all()
 
 
 @router.get("/productos/{codigo}", response_model=ProductoResponse, tags=["Productos"])
@@ -179,6 +203,30 @@ def eliminar_producto(codigo: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     db.delete(producto)
     db.commit()
+
+
+@router.get("/productos/{codigo}/lotes", response_model=List[LoteResponse], tags=["Productos"])
+def listar_lotes_de_producto(codigo: int, db: Session = Depends(get_db)):
+    """RS5204 — fecha de vencimiento del producto en la ficha técnica.
+
+    Excepción puntual y acotada al bloqueo general de `/lotes` (Fase 1,
+    RS0028): solo expone los lotes vendibles (Vigente/Por Vencer) de ESE
+    producto, ordenados por FEFO — nunca lotes en Vencido/Cuarentena ni la
+    trazabilidad interna completa del almacén.
+    """
+    producto = db.query(Producto).filter(Producto.codigoProducto == codigo).first()
+    if not producto:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    return (
+        db.query(Lote)
+        .filter(
+            Lote.codigoProducto == codigo,
+            Lote.estado.in_(("Vigente", "Por Vencer")),
+            Lote.stockDisponible > 0,
+        )
+        .order_by(Lote.fechaVencimiento.asc())
+        .all()
+    )
 
 
 # ── Lotes ──────────────────────────────────────────────────────────────────

@@ -19,4 +19,7 @@ __pycache__/
 .env
 backend/.env
 
+# Archivos subidos por usuarios (imágenes de recetas médicas, CUS104)
+backend/uploads/
+
 Docs/Plan_Implementacion_Correcciones.md

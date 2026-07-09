@@ -38,25 +38,28 @@ LABORATORIOS = [
 
 # codigoCategoria/codigoLaboratorio se resuelven por nombre al momento de
 # sembrar, en vez de hardcodear IDs que dependen del orden de inserción.
+# `presentacion`/`stockMinimo` (Fase 2, RS5204/RS5411) replican los valores
+# que ya traía `frontend/src/app/core/data.service.ts` en su mock, para que
+# la ficha de producto no quede en blanco al apagar `useMockData`.
 PRODUCTOS = [
-    {"categoria": "Medicamentos", "laboratorio": "Medifarma", "nombreProducto": "Paracetamol 500mg", "descripcion": "Analgésico y antipirético. Caja x 100 tabletas.", "precioVenta": 8.50, "condicionVenta": "Venta Libre", "stockDisponible": 320},
-    {"categoria": "Medicamentos", "laboratorio": "Bayer", "nombreProducto": "Aspirina 100mg", "descripcion": "Ácido acetilsalicílico. Prevención cardiovascular.", "precioVenta": 12.90, "condicionVenta": "Venta Libre", "stockDisponible": 145},
-    {"categoria": "Medicamentos", "laboratorio": "Genfar", "nombreProducto": "Amoxicilina 500mg", "descripcion": "Antibiótico de amplio espectro.", "precioVenta": 18.00, "condicionVenta": "Bajo Receta", "stockDisponible": 0},
-    {"categoria": "Medicamentos", "laboratorio": "Pfizer", "nombreProducto": "Azitromicina 500mg", "descripcion": "Antibiótico macrólido.", "precioVenta": 24.50, "condicionVenta": "Bajo Receta", "stockDisponible": 62},
-    {"categoria": "Medicamentos", "laboratorio": "Hersil", "nombreProducto": "Ibuprofeno 400mg", "descripcion": "Antiinflamatorio no esteroideo.", "precioVenta": 9.90, "condicionVenta": "Venta Libre", "stockDisponible": 210},
-    {"categoria": "Dispositivos Médicos", "laboratorio": "Abbott", "nombreProducto": "Termómetro Digital", "descripcion": "Medición rápida y precisa. Punta flexible.", "precioVenta": 25.90, "condicionVenta": "Venta Libre", "stockDisponible": 48},
-    {"categoria": "Dispositivos Médicos", "laboratorio": "Abbott", "nombreProducto": "Tensiómetro Digital de Brazo", "descripcion": "Monitor de presión arterial automático.", "precioVenta": 129.00, "condicionVenta": "Venta Libre", "stockDisponible": 12},
-    {"categoria": "Dispositivos Médicos", "laboratorio": "Roche", "nombreProducto": "Glucómetro Accu-Chek", "descripcion": "Medidor de glucosa en sangre con 10 tiras.", "precioVenta": 89.90, "condicionVenta": "Venta Libre", "stockDisponible": 9},
-    {"categoria": "Dermocosmética", "laboratorio": "La Roche-Posay", "nombreProducto": "Protector Solar FPS 50+", "descripcion": "Anthelios. Protección alta para rostro.", "precioVenta": 68.00, "condicionVenta": "Venta Libre", "stockDisponible": 35},
-    {"categoria": "Dermocosmética", "laboratorio": "La Roche-Posay", "nombreProducto": "Gel Limpiador Facial", "descripcion": "Effaclar. Piel grasa y con tendencia acneica.", "precioVenta": 54.50, "condicionVenta": "Venta Libre", "stockDisponible": 28},
-    {"categoria": "Infantil", "laboratorio": "Medifarma", "nombreProducto": "Pañales Etapa 3 x40", "descripcion": "Hipoalergénicos, 6 a 10 kg.", "precioVenta": 42.90, "condicionVenta": "Venta Libre", "stockDisponible": 60},
-    {"categoria": "Infantil", "laboratorio": "Hersil", "nombreProducto": "Suero Fisiológico Bebé", "descripcion": "Solución para higiene nasal infantil.", "precioVenta": 14.50, "condicionVenta": "Venta Libre", "stockDisponible": 90},
-    {"categoria": "Vitaminas y Suplementos", "laboratorio": "Pfizer", "nombreProducto": "Vitamina C 1000mg", "descripcion": "Refuerzo del sistema inmune. Efervescente.", "precioVenta": 29.90, "condicionVenta": "Venta Libre", "stockDisponible": 110},
-    {"categoria": "Vitaminas y Suplementos", "laboratorio": "Roche", "nombreProducto": "Vitamina D3 2000 UI", "descripcion": "Salud ósea e inmunológica.", "precioVenta": 38.50, "condicionVenta": "Venta Libre", "stockDisponible": 24},
-    {"categoria": "Vitaminas y Suplementos", "laboratorio": "Hersil", "nombreProducto": "Colágeno Hidrolizado", "descripcion": "Con magnesio y vitamina C. Sabor frutos rojos.", "precioVenta": 75.00, "condicionVenta": "Venta Libre", "stockDisponible": 18},
-    {"categoria": "Bioseguridad e Higiene", "laboratorio": "Medifarma", "nombreProducto": "Alcohol en Gel 1L", "descripcion": "Antibacterial 70°. Dispensador.", "precioVenta": 16.90, "condicionVenta": "Venta Libre", "stockDisponible": 140},
-    {"categoria": "Bioseguridad e Higiene", "laboratorio": "Medifarma", "nombreProducto": "Mascarillas KN95 x10", "descripcion": "Protección respiratoria, 5 capas.", "precioVenta": 19.90, "condicionVenta": "Venta Libre", "stockDisponible": 4},
-    {"categoria": "Medicamentos", "laboratorio": "Genfar", "nombreProducto": "Loratadina 10mg", "descripcion": "Antihistamínico para alergias.", "precioVenta": 7.50, "condicionVenta": "Venta Libre", "stockDisponible": 175},
+    {"categoria": "Medicamentos", "laboratorio": "Medifarma", "nombreProducto": "Paracetamol 500mg", "descripcion": "Analgésico y antipirético. Caja x 100 tabletas.", "precioVenta": 8.50, "condicionVenta": "Venta Libre", "stockDisponible": 320, "presentacion": "Caja x 100 tab", "stockMinimo": 50},
+    {"categoria": "Medicamentos", "laboratorio": "Bayer", "nombreProducto": "Aspirina 100mg", "descripcion": "Ácido acetilsalicílico. Prevención cardiovascular.", "precioVenta": 12.90, "condicionVenta": "Venta Libre", "stockDisponible": 145, "presentacion": "Caja x 30 tab", "stockMinimo": 40},
+    {"categoria": "Medicamentos", "laboratorio": "Genfar", "nombreProducto": "Amoxicilina 500mg", "descripcion": "Antibiótico de amplio espectro.", "precioVenta": 18.00, "condicionVenta": "Bajo Receta", "stockDisponible": 0, "presentacion": "Caja x 21 cáps", "stockMinimo": 30},
+    {"categoria": "Medicamentos", "laboratorio": "Pfizer", "nombreProducto": "Azitromicina 500mg", "descripcion": "Antibiótico macrólido.", "precioVenta": 24.50, "condicionVenta": "Bajo Receta", "stockDisponible": 62, "presentacion": "Caja x 3 tab", "stockMinimo": 25},
+    {"categoria": "Medicamentos", "laboratorio": "Hersil", "nombreProducto": "Ibuprofeno 400mg", "descripcion": "Antiinflamatorio no esteroideo.", "precioVenta": 9.90, "condicionVenta": "Venta Libre", "stockDisponible": 210, "presentacion": "Caja x 100 tab", "stockMinimo": 50},
+    {"categoria": "Dispositivos Médicos", "laboratorio": "Abbott", "nombreProducto": "Termómetro Digital", "descripcion": "Medición rápida y precisa. Punta flexible.", "precioVenta": 25.90, "condicionVenta": "Venta Libre", "stockDisponible": 48, "presentacion": "Unidad", "stockMinimo": 15},
+    {"categoria": "Dispositivos Médicos", "laboratorio": "Abbott", "nombreProducto": "Tensiómetro Digital de Brazo", "descripcion": "Monitor de presión arterial automático.", "precioVenta": 129.00, "condicionVenta": "Venta Libre", "stockDisponible": 12, "presentacion": "Unidad", "stockMinimo": 5},
+    {"categoria": "Dispositivos Médicos", "laboratorio": "Roche", "nombreProducto": "Glucómetro Accu-Chek", "descripcion": "Medidor de glucosa en sangre con 10 tiras.", "precioVenta": 89.90, "condicionVenta": "Venta Libre", "stockDisponible": 9, "presentacion": "Kit", "stockMinimo": 8},
+    {"categoria": "Dermocosmética", "laboratorio": "La Roche-Posay", "nombreProducto": "Protector Solar FPS 50+", "descripcion": "Anthelios. Protección alta para rostro.", "precioVenta": 68.00, "condicionVenta": "Venta Libre", "stockDisponible": 35, "presentacion": "Frasco 50ml", "stockMinimo": 10},
+    {"categoria": "Dermocosmética", "laboratorio": "La Roche-Posay", "nombreProducto": "Gel Limpiador Facial", "descripcion": "Effaclar. Piel grasa y con tendencia acneica.", "precioVenta": 54.50, "condicionVenta": "Venta Libre", "stockDisponible": 28, "presentacion": "Frasco 200ml", "stockMinimo": 10},
+    {"categoria": "Infantil", "laboratorio": "Medifarma", "nombreProducto": "Pañales Etapa 3 x40", "descripcion": "Hipoalergénicos, 6 a 10 kg.", "precioVenta": 42.90, "condicionVenta": "Venta Libre", "stockDisponible": 60, "presentacion": "Paquete x 40", "stockMinimo": 20},
+    {"categoria": "Infantil", "laboratorio": "Hersil", "nombreProducto": "Suero Fisiológico Bebé", "descripcion": "Solución para higiene nasal infantil.", "precioVenta": 14.50, "condicionVenta": "Venta Libre", "stockDisponible": 90, "presentacion": "Caja x 20 amp", "stockMinimo": 25},
+    {"categoria": "Vitaminas y Suplementos", "laboratorio": "Pfizer", "nombreProducto": "Vitamina C 1000mg", "descripcion": "Refuerzo del sistema inmune. Efervescente.", "precioVenta": 29.90, "condicionVenta": "Venta Libre", "stockDisponible": 110, "presentacion": "Tubo x 20 tab", "stockMinimo": 30},
+    {"categoria": "Vitaminas y Suplementos", "laboratorio": "Roche", "nombreProducto": "Vitamina D3 2000 UI", "descripcion": "Salud ósea e inmunológica.", "precioVenta": 38.50, "condicionVenta": "Venta Libre", "stockDisponible": 24, "presentacion": "Frasco x 60 cáps", "stockMinimo": 15},
+    {"categoria": "Vitaminas y Suplementos", "laboratorio": "Hersil", "nombreProducto": "Colágeno Hidrolizado", "descripcion": "Con magnesio y vitamina C. Sabor frutos rojos.", "precioVenta": 75.00, "condicionVenta": "Venta Libre", "stockDisponible": 18, "presentacion": "Pote 300g", "stockMinimo": 10},
+    {"categoria": "Bioseguridad e Higiene", "laboratorio": "Medifarma", "nombreProducto": "Alcohol en Gel 1L", "descripcion": "Antibacterial 70°. Dispensador.", "precioVenta": 16.90, "condicionVenta": "Venta Libre", "stockDisponible": 140, "presentacion": "Botella 1L", "stockMinimo": 40},
+    {"categoria": "Bioseguridad e Higiene", "laboratorio": "Medifarma", "nombreProducto": "Mascarillas KN95 x10", "descripcion": "Protección respiratoria, 5 capas.", "precioVenta": 19.90, "condicionVenta": "Venta Libre", "stockDisponible": 4, "presentacion": "Caja x 10", "stockMinimo": 30},
+    {"categoria": "Medicamentos", "laboratorio": "Genfar", "nombreProducto": "Loratadina 10mg", "descripcion": "Antihistamínico para alergias.", "precioVenta": 7.50, "condicionVenta": "Venta Libre", "stockDisponible": 175, "presentacion": "Caja x 10 tab", "stockMinimo": 40},
 ]
 
 PROVEEDORES = [
@@ -107,7 +110,8 @@ def _seed_laboratorios(db) -> dict[str, int]:
 
 def _seed_productos(db, categorias: dict[str, int], laboratorios: dict[str, int]) -> None:
     if db.query(Producto).count() > 0:
-        print("Producto ya tiene registros, se omite.")
+        print("Producto ya tiene registros, se omite (se intenta completar presentacion/stockMinimo).")
+        _backfill_presentacion_y_stock_minimo(db)
         return
     productos = [
         Producto(
@@ -118,12 +122,33 @@ def _seed_productos(db, categorias: dict[str, int], laboratorios: dict[str, int]
             precioVenta=p["precioVenta"],
             condicionVenta=p["condicionVenta"],
             stockDisponible=p["stockDisponible"],
+            presentacion=p["presentacion"],
+            stockMinimo=p["stockMinimo"],
         )
         for p in PRODUCTOS
     ]
     db.add_all(productos)
     db.commit()
     print(f"Producto: {len(productos)} registros insertados.")
+
+
+def _backfill_presentacion_y_stock_minimo(db) -> None:
+    """Completa `presentacion`/`stockMinimo` (Fase 2) en productos que ya
+    existían de una siembra previa a esos campos. Idempotente: solo toca
+    filas con `presentacion` vacía."""
+    por_nombre = {p["nombreProducto"]: p for p in PRODUCTOS}
+    pendientes = db.query(Producto).filter(Producto.presentacion.is_(None)).all()
+    actualizados = 0
+    for producto in pendientes:
+        datos = por_nombre.get(producto.nombreProducto)
+        if not datos:
+            continue
+        producto.presentacion = datos["presentacion"]
+        producto.stockMinimo = datos["stockMinimo"]
+        actualizados += 1
+    if actualizados:
+        db.commit()
+        print(f"Producto: {actualizados} registros completados con presentacion/stockMinimo.")
 
 
 def _seed_proveedores(db) -> None:

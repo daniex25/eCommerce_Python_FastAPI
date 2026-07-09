@@ -1,6 +1,8 @@
 export const environment = {
   production: false,
-  /** Cambiar a false para consumir el backend FastAPI real en apiUrl */
-  useMockData: true,
+  /** Fase 2: catálogo, pedidos, lotes, clientes y recetas ya vienen del
+   * backend real. Repartidores/Entregas/Comprobantes (listado)/Top
+   * productos siguen en mock hasta las Fases 4-5. */
+  useMockData: false,
   apiUrl: 'http://127.0.0.1:8000',
 };

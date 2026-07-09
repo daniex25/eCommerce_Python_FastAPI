@@ -3,10 +3,55 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
-  Producto, Categoria, Laboratorio, Lote, Cliente, Pedido, 
-  Repartidor, Entrega, RecetaMedica, Comprobante, Proveedor, 
+  Producto, Categoria, Laboratorio, Lote, Cliente, Pedido,
+  Repartidor, Entrega, RecetaMedica, Comprobante, Proveedor,
   OrdenCompra, Reclamo, Cupon, MovimientoCaja, ProductoVendido,
 } from './models';
+
+export interface ItemCheckoutRequest {
+  codigoProducto: number;
+  cantidad: number;
+  numeroReceta?: number;
+}
+
+export interface CheckoutRequest {
+  items: ItemCheckoutRequest[];
+  direccionEntrega: string;
+  distrito?: string;
+  metodoPago: string;
+  tipoComprobante: 'Boleta' | 'Factura';
+  documentoCliente?: string;
+  nombreCliente?: string;
+}
+
+export interface CheckoutResponse {
+  pedido: Pedido;
+  pago: { codigoPago: number; estadoPago: string };
+  comprobante: Comprobante;
+}
+
+export interface RecetaInlinePOS {
+  nombrePaciente: string;
+  medicoTratante: string;
+  cmpMedico?: string;
+  fechaEmision?: string;
+}
+
+export interface ItemVentaPOSRequest {
+  codigoProducto: number;
+  cantidad: number;
+  receta?: RecetaInlinePOS;
+}
+
+export interface VentaPOSRequest {
+  items: ItemVentaPOSRequest[];
+  metodoPago: string;
+}
+
+export interface VentaPOSResponse {
+  pedido: Pedido;
+  pago: { codigoPago: number; estadoPago: string };
+}
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -49,8 +94,13 @@ export class ApiService {
   getPedido(id: number): Observable<Pedido> {
     return this.http.get<Pedido>(`${this.apiUrl}/pedidos/${id}`);
   }
-  crearPedido(pedido: any): Observable<Pedido> {
-    return this.http.post<Pedido>(`${this.apiUrl}/checkout`, pedido);
+
+  // ── Checkout (CUS105) y POS (CUS202) ──
+  checkout(data: CheckoutRequest): Observable<CheckoutResponse> {
+    return this.http.post<CheckoutResponse>(`${this.apiUrl}/checkout`, data);
+  }
+  ventaPOS(data: VentaPOSRequest): Observable<VentaPOSResponse> {
+    return this.http.post<VentaPOSResponse>(`${this.apiUrl}/pos/venta`, data);
   }
 
   // ── Lotes ──
@@ -72,12 +122,26 @@ export class ApiService {
     return this.http.put(`${this.apiUrl}/entregas/${id}/estado`, estado);
   }
 
-  // ── Recetas ──
+  // ── Recetas (CUS104) ──
   getRecetas(): Observable<RecetaMedica[]> {
     return this.http.get<RecetaMedica[]>(`${this.apiUrl}/recetas-medicas`);
   }
-  validarReceta(id: number, data: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/recetas-medicas/${id}/validar`, data);
+  getReceta(numero: number): Observable<RecetaMedica> {
+    return this.http.get<RecetaMedica>(`${this.apiUrl}/recetas-medicas/${numero}`);
+  }
+  crearReceta(data: {
+    codigoProducto: number; nombrePaciente: string; medicoTratante: string;
+    cmpMedico?: string; fechaEmision: string;
+  }): Observable<RecetaMedica> {
+    return this.http.post<RecetaMedica>(`${this.apiUrl}/recetas-medicas`, data);
+  }
+  subirImagenReceta(numero: number, archivo: File): Observable<RecetaMedica> {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+    return this.http.post<RecetaMedica>(`${this.apiUrl}/recetas-medicas/${numero}/imagen`, formData);
+  }
+  validarReceta(id: number, data: { estado: 'Aprobada' | 'Rechazada' }): Observable<RecetaMedica> {
+    return this.http.put<RecetaMedica>(`${this.apiUrl}/recetas-medicas/${id}/validar`, data);
   }
 
   // ── Reportes ──
@@ -88,9 +152,15 @@ export class ApiService {
     return this.http.get<ProductoVendido[]>(`${this.apiUrl}/reportes/top-productos`);
   }
 
-  // ── Comprobantes ──
-  emitirComprobante(data: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/comprobantes/emitir`, data);
+  // ── Comprobantes (CUS203) ──
+  getComprobante(numero: string): Observable<Comprobante> {
+    return this.http.get<Comprobante>(`${this.apiUrl}/comprobantes/${numero}`);
+  }
+  emitirComprobante(data: {
+    codigoPago: number; tipoComprobante: 'Boleta' | 'Factura';
+    documentoCliente?: string; nombreCliente?: string;
+  }): Observable<Comprobante> {
+    return this.http.post<Comprobante>(`${this.apiUrl}/comprobantes/emitir`, data);
   }
 
   // ── Autenticación (CUS501/CUS101) ──

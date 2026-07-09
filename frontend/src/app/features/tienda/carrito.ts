@@ -21,7 +21,17 @@ import { DataService, IGV_RATE } from '../../core/data.service';
                 <tr>
                   <td>
                     <div class="ci"><span class="ci-img"><i class="fa-solid {{ i.producto.icono }}"></i></span>
-                      <div><b>{{ i.producto.nombreProducto }}</b><div class="muted small">{{ i.producto.laboratorio }} · {{ i.producto.presentacion }}</div></div>
+                      <div>
+                        <b>{{ i.producto.nombreProducto }}</b>
+                        <div class="muted small">{{ i.producto.laboratorio }} · {{ i.producto.presentacion }}</div>
+                        @if (i.producto.condicionVenta === 'Bajo Receta') {
+                          @if (i.numeroReceta) {
+                            <span class="badge badge-green small">Receta #{{ i.numeroReceta }} aprobada</span>
+                          } @else {
+                            <span class="badge badge-red small">Falta receta validada</span>
+                          }
+                        }
+                      </div>
                     </div>
                   </td>
                   <td class="num">S/ {{ i.producto.precioVenta.toFixed(2) }}</td>
@@ -48,7 +58,12 @@ import { DataService, IGV_RATE } from '../../core/data.service';
         <div class="r-line"><span>IGV (18%)</span><b>S/ {{ igv().toFixed(2) }}</b></div>
         <div class="r-line"><span>Envío</span><b>S/ {{ envio.toFixed(2) }}</b></div>
         <div class="r-total"><span>Total</span><span class="price">S/ {{ total().toFixed(2) }}</span></div>
-        <a routerLink="/tienda/checkout" class="btn btn-primary btn-block btn-lg mt">Ir a pagar →</a>
+        @if (faltaReceta()) {
+          <div class="notice notice-amber mt small">Tienes productos bajo receta sin validar. Complétala antes de pagar.</div>
+          <button class="btn btn-primary btn-block btn-lg mt" disabled>Ir a pagar →</button>
+        } @else {
+          <a routerLink="/tienda/checkout" class="btn btn-primary btn-block btn-lg mt">Ir a pagar →</a>
+        }
         <div class="r-pay muted small">Aceptamos Yape · Plin · PagoEfectivo · Tarjeta</div>
       </aside>
     </div>
@@ -86,4 +101,7 @@ export class Carrito {
   baseImponible() { return this.data.subtotalCarrito() / (1 + IGV_RATE); }
   igv() { return this.data.subtotalCarrito() - this.baseImponible(); }
   total() { return this.data.subtotalCarrito() + this.envio; }
+  faltaReceta() {
+    return this.data.getCarrito().some(i => i.producto.condicionVenta === 'Bajo Receta' && !i.numeroReceta);
+  }
 }

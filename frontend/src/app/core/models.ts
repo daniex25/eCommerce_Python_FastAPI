@@ -43,6 +43,9 @@ export interface Lote {
 export interface ItemCarrito {
   producto: Producto;
   cantidad: number;
+  // Solo para productos "Bajo Receta": receta ya aprobada que respalda
+  // este ítem (RN1101). El checkout la envía al backend para consumirla.
+  numeroReceta?: number;
 }
 
 export interface Cliente {
@@ -102,13 +105,16 @@ export interface Entrega {
 
 export interface RecetaMedica {
   numeroReceta: number;
-  numeroPedido: number;
+  numeroPedido: number | null;
+  codigoProducto: number | null;
   nombrePaciente: string;
   medicoTratante: string;
+  cmpMedico?: string;
   fechaEmision: string;
   estado: 'Pendiente' | 'Aprobada' | 'Rechazada';
+  imagenUrl?: string;
+  // Solo frontend: nombre del producto, resuelto por codigoProducto.
   icono?: string;
-  cmp?: string;
   producto?: string;
 }
 

@@ -28,6 +28,10 @@ export const routes: Routes = [
         canActivate: [authGuard], data: { roles: ['Cliente'] },
       },
       {
+        path: 'receta/:id', loadComponent: () => import('./features/tienda/subir-receta').then(m => m.SubirReceta),
+        canActivate: [authGuard], data: { roles: ['Cliente'] },
+      },
+      {
         path: 'checkout', loadComponent: () => import('./features/tienda/checkout').then(m => m.Checkout),
         canActivate: [authGuard], data: { roles: ['Cliente'] },
       },

@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DataService } from '../../core/data.service';
-import { Producto } from '../../core/models';
+import { ApiService } from '../../core/api.service';
+import { AuthService } from '../../core/auth.service';
+import { Producto, RecetaMedica } from '../../core/models';
 
 @Component({
   selector: 'app-ficha-producto',
@@ -23,7 +25,11 @@ import { Producto } from '../../core/models';
         <div class="d-lab">{{ p.laboratorio }} · {{ p.categoria }}</div>
         <h1>{{ p.nombreProducto }}</h1>
         @if (p.condicionVenta === 'Bajo Receta') {
-          <div class="notice notice-amber mb"><i class="fa-solid fa-triangle-exclamation"></i> <div>Producto de <b>venta bajo receta médica</b>. Deberás adjuntar tu receta válida en el checkout para que el Químico Farmacéutico la valide.</div></div>
+          @if (recetaAprobada) {
+            <div class="notice notice-green mb"><i class="fa-solid fa-circle-check"></i> Tienes una receta #{{ recetaAprobada.numeroReceta }} aprobada para este producto.</div>
+          } @else {
+            <div class="notice notice-amber mb"><i class="fa-solid fa-triangle-exclamation"></i> <div>Producto de <b>venta bajo receta médica</b>. Necesitas una receta validada por el Químico Farmacéutico antes de agregarlo al carrito. <a [routerLink]="['/tienda/receta', p.codigoProducto]">Subir mi receta →</a></div></div>
+          }
         }
         <p class="muted">{{ p.descripcion }}</p>
 
@@ -45,7 +51,11 @@ import { Producto } from '../../core/models';
             <input class="inp" [(ngModel)]="cant" type="number" min="1" />
             <button (click)="cant = cant+1">＋</button>
           </div>
-          <button class="btn btn-primary btn-lg right" [disabled]="p.stockDisponible === 0" (click)="add(p)"><i class="fa-solid fa-cart-shopping"></i> Agregar al carrito</button>
+          @if (p.condicionVenta === 'Bajo Receta' && !recetaAprobada) {
+            <a [routerLink]="['/tienda/receta', p.codigoProducto]" class="btn btn-primary btn-lg right"><i class="fa-solid fa-file-medical"></i> Subir mi receta</a>
+          } @else {
+            <button class="btn btn-primary btn-lg right" [disabled]="p.stockDisponible === 0" (click)="add(p)"><i class="fa-solid fa-cart-shopping"></i> Agregar al carrito</button>
+          }
         </div>
 
         <div class="d-feats">
@@ -80,18 +90,32 @@ import { Producto } from '../../core/models';
 })
 export class FichaProducto {
   data = inject(DataService);
+  api = inject(ApiService);
+  auth = inject(AuthService);
   route = inject(ActivatedRoute);
   p?: Producto;
   cant = 1;
   toast = '';
+  recetaAprobada?: RecetaMedica;
 
   constructor() {
     const id = +this.route.snapshot.paramMap.get('id')!;
     this.p = this.data.getProducto(id);
+
+    if (this.p?.condicionVenta === 'Bajo Receta' && this.auth.usuarioActual()?.rol === 'Cliente') {
+      this.api.getRecetas().subscribe({
+        next: (recetas) => {
+          this.recetaAprobada = recetas.find(
+            r => r.codigoProducto === this.p!.codigoProducto && r.estado === 'Aprobada' && !r.numeroPedido
+          );
+        },
+        error: () => {},
+      });
+    }
   }
 
   add(p: Producto) {
-    this.data.agregarAlCarrito(p, +this.cant);
+    this.data.agregarAlCarrito(p, +this.cant, this.recetaAprobada?.numeroReceta);
     this.toast = `${this.cant} × ${p.nombreProducto} agregado`;
     setTimeout(() => this.toast = '', 1800);
   }

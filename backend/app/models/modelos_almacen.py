@@ -29,6 +29,10 @@ class Producto(Base):
     precioVenta = Column(DECIMAL(10, 2))
     condicionVenta = Column(String(50))
     stockDisponible = Column(Integer, default=0)
+    # RS5411 (alerta de stock mínimo), RS5204/CUS102 (ficha de producto).
+    stockMinimo = Column(Integer, default=10)
+    imagenUrl = Column(String(500))
+    presentacion = Column(String(100))
 
 
 class Lote(Base):

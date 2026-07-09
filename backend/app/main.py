@@ -1,5 +1,8 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.routers import router_almacen, router_ventas, router_compras, router_auth
 
@@ -16,6 +19,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Imágenes de recetas médicas subidas por el Cliente (CUS104). No se
+# versionan (ver .gitignore); se sirven tal cual para que el Q.F. las
+# revise y el Cliente las vea en su historial.
+os.makedirs("uploads/recetas", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.include_router(router_auth.router)
 app.include_router(router_almacen.router, tags=["Almacén"])

@@ -1,6 +1,9 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import Literal, Optional
 from datetime import date
+
+CondicionVenta = Literal["Venta Libre", "Bajo Receta"]
+EstadoLote = Literal["Vigente", "Por Vencer", "Vencido", "Cuarentena"]
 
 
 # ── Categoria ──────────────────────────────────────────────────────────────
@@ -50,8 +53,11 @@ class ProductoBase(BaseModel):
     nombreProducto: str
     descripcion: Optional[str] = None
     precioVenta: Optional[float] = None
-    condicionVenta: Optional[str] = None
+    condicionVenta: Optional[CondicionVenta] = None
     stockDisponible: Optional[int] = 0
+    stockMinimo: Optional[int] = 10
+    imagenUrl: Optional[str] = None
+    presentacion: Optional[str] = None
 
 
 class ProductoCreate(ProductoBase):
@@ -64,8 +70,11 @@ class ProductoUpdate(BaseModel):
     nombreProducto: Optional[str] = None
     descripcion: Optional[str] = None
     precioVenta: Optional[float] = None
-    condicionVenta: Optional[str] = None
+    condicionVenta: Optional[CondicionVenta] = None
     stockDisponible: Optional[int] = None
+    stockMinimo: Optional[int] = None
+    imagenUrl: Optional[str] = None
+    presentacion: Optional[str] = None
 
 
 class ProductoResponse(ProductoBase):
@@ -79,7 +88,7 @@ class LoteBase(BaseModel):
     numeroLote: str
     fechaVencimiento: Optional[date] = None
     stockDisponible: Optional[int] = 0
-    estado: Optional[str] = None
+    estado: Optional[EstadoLote] = None
 
 
 class LoteCreate(LoteBase):
@@ -91,7 +100,7 @@ class LoteUpdate(BaseModel):
     numeroLote: Optional[str] = None
     fechaVencimiento: Optional[date] = None
     stockDisponible: Optional[int] = None
-    estado: Optional[str] = None
+    estado: Optional[EstadoLote] = None
 
 
 class LoteResponse(LoteBase):
