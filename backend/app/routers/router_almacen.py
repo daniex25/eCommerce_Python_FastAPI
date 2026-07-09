@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 
+from app.core.deps import require_role
 from app.db.database import get_db
 from app.models.modelos_almacen import Categoria, Laboratorio, Producto, Lote
 from app.schemas.schemas_almacen import (
@@ -12,6 +13,13 @@ from app.schemas.schemas_almacen import (
 )
 
 router = APIRouter()
+
+# Gestión de catálogo (crear/editar/eliminar productos, categorías,
+# laboratorios) y de lotes: reservada a Administrador y Encargado de
+# Almacén (RS0029). La consulta del catálogo (GET) permanece pública
+# porque es la base de CUS102 — Consultar catálogo.
+STAFF_ALMACEN = ("Administrador", "Encargado de Almacén", "Administrador del Sistema")
+STAFF_CONSULTA_LOTES = STAFF_ALMACEN + ("Químico Farmacéutico", "Técnico de Farmacia")
 
 
 # ── Categorias ─────────────────────────────────────────────────────────────
@@ -28,7 +36,10 @@ def obtener_categoria(codigo: int, db: Session = Depends(get_db)):
     return categoria
 
 
-@router.post("/categorias", response_model=CategoriaResponse, status_code=status.HTTP_201_CREATED, tags=["Categorias"])
+@router.post(
+    "/categorias", response_model=CategoriaResponse, status_code=status.HTTP_201_CREATED,
+    tags=["Categorias"], dependencies=[Depends(require_role(*STAFF_ALMACEN))],
+)
 def crear_categoria(data: CategoriaCreate, db: Session = Depends(get_db)):
     categoria = Categoria(**data.model_dump())
     db.add(categoria)
@@ -37,7 +48,10 @@ def crear_categoria(data: CategoriaCreate, db: Session = Depends(get_db)):
     return categoria
 
 
-@router.put("/categorias/{codigo}", response_model=CategoriaResponse, tags=["Categorias"])
+@router.put(
+    "/categorias/{codigo}", response_model=CategoriaResponse,
+    tags=["Categorias"], dependencies=[Depends(require_role(*STAFF_ALMACEN))],
+)
 def actualizar_categoria(codigo: int, data: CategoriaUpdate, db: Session = Depends(get_db)):
     categoria = db.query(Categoria).filter(Categoria.codigoCategoria == codigo).first()
     if not categoria:
@@ -49,7 +63,10 @@ def actualizar_categoria(codigo: int, data: CategoriaUpdate, db: Session = Depen
     return categoria
 
 
-@router.delete("/categorias/{codigo}", status_code=status.HTTP_204_NO_CONTENT, tags=["Categorias"])
+@router.delete(
+    "/categorias/{codigo}", status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Categorias"], dependencies=[Depends(require_role(*STAFF_ALMACEN))],
+)
 def eliminar_categoria(codigo: int, db: Session = Depends(get_db)):
     categoria = db.query(Categoria).filter(Categoria.codigoCategoria == codigo).first()
     if not categoria:
@@ -72,7 +89,10 @@ def obtener_laboratorio(codigo: int, db: Session = Depends(get_db)):
     return lab
 
 
-@router.post("/laboratorios", response_model=LaboratorioResponse, status_code=status.HTTP_201_CREATED, tags=["Laboratorios"])
+@router.post(
+    "/laboratorios", response_model=LaboratorioResponse, status_code=status.HTTP_201_CREATED,
+    tags=["Laboratorios"], dependencies=[Depends(require_role(*STAFF_ALMACEN))],
+)
 def crear_laboratorio(data: LaboratorioCreate, db: Session = Depends(get_db)):
     lab = Laboratorio(**data.model_dump())
     db.add(lab)
@@ -81,7 +101,10 @@ def crear_laboratorio(data: LaboratorioCreate, db: Session = Depends(get_db)):
     return lab
 
 
-@router.put("/laboratorios/{codigo}", response_model=LaboratorioResponse, tags=["Laboratorios"])
+@router.put(
+    "/laboratorios/{codigo}", response_model=LaboratorioResponse,
+    tags=["Laboratorios"], dependencies=[Depends(require_role(*STAFF_ALMACEN))],
+)
 def actualizar_laboratorio(codigo: int, data: LaboratorioUpdate, db: Session = Depends(get_db)):
     lab = db.query(Laboratorio).filter(Laboratorio.codigoLaboratorio == codigo).first()
     if not lab:
@@ -93,7 +116,10 @@ def actualizar_laboratorio(codigo: int, data: LaboratorioUpdate, db: Session = D
     return lab
 
 
-@router.delete("/laboratorios/{codigo}", status_code=status.HTTP_204_NO_CONTENT, tags=["Laboratorios"])
+@router.delete(
+    "/laboratorios/{codigo}", status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Laboratorios"], dependencies=[Depends(require_role(*STAFF_ALMACEN))],
+)
 def eliminar_laboratorio(codigo: int, db: Session = Depends(get_db)):
     lab = db.query(Laboratorio).filter(Laboratorio.codigoLaboratorio == codigo).first()
     if not lab:
@@ -116,7 +142,10 @@ def obtener_producto(codigo: int, db: Session = Depends(get_db)):
     return producto
 
 
-@router.post("/productos", response_model=ProductoResponse, status_code=status.HTTP_201_CREATED, tags=["Productos"])
+@router.post(
+    "/productos", response_model=ProductoResponse, status_code=status.HTTP_201_CREATED,
+    tags=["Productos"], dependencies=[Depends(require_role(*STAFF_ALMACEN))],
+)
 def crear_producto(data: ProductoCreate, db: Session = Depends(get_db)):
     producto = Producto(**data.model_dump())
     db.add(producto)
@@ -125,7 +154,10 @@ def crear_producto(data: ProductoCreate, db: Session = Depends(get_db)):
     return producto
 
 
-@router.put("/productos/{codigo}", response_model=ProductoResponse, tags=["Productos"])
+@router.put(
+    "/productos/{codigo}", response_model=ProductoResponse,
+    tags=["Productos"], dependencies=[Depends(require_role(*STAFF_ALMACEN))],
+)
 def actualizar_producto(codigo: int, data: ProductoUpdate, db: Session = Depends(get_db)):
     producto = db.query(Producto).filter(Producto.codigoProducto == codigo).first()
     if not producto:
@@ -137,7 +169,10 @@ def actualizar_producto(codigo: int, data: ProductoUpdate, db: Session = Depends
     return producto
 
 
-@router.delete("/productos/{codigo}", status_code=status.HTTP_204_NO_CONTENT, tags=["Productos"])
+@router.delete(
+    "/productos/{codigo}", status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Productos"], dependencies=[Depends(require_role(*STAFF_ALMACEN))],
+)
 def eliminar_producto(codigo: int, db: Session = Depends(get_db)):
     producto = db.query(Producto).filter(Producto.codigoProducto == codigo).first()
     if not producto:
@@ -147,12 +182,20 @@ def eliminar_producto(codigo: int, db: Session = Depends(get_db)):
 
 
 # ── Lotes ──────────────────────────────────────────────────────────────────
-@router.get("/lotes", response_model=List[LoteResponse], tags=["Lotes"])
+# Trazabilidad farmacológica (RN1301-1305): datos internos, no expuestos al
+# público, consultables por el personal que dispensa o controla stock.
+@router.get(
+    "/lotes", response_model=List[LoteResponse], tags=["Lotes"],
+    dependencies=[Depends(require_role(*STAFF_CONSULTA_LOTES))],
+)
 def listar_lotes(db: Session = Depends(get_db)):
     return db.query(Lote).all()
 
 
-@router.get("/lotes/{codigo}", response_model=LoteResponse, tags=["Lotes"])
+@router.get(
+    "/lotes/{codigo}", response_model=LoteResponse, tags=["Lotes"],
+    dependencies=[Depends(require_role(*STAFF_CONSULTA_LOTES))],
+)
 def obtener_lote(codigo: int, db: Session = Depends(get_db)):
     lote = db.query(Lote).filter(Lote.codigoLote == codigo).first()
     if not lote:
@@ -160,7 +203,10 @@ def obtener_lote(codigo: int, db: Session = Depends(get_db)):
     return lote
 
 
-@router.post("/lotes", response_model=LoteResponse, status_code=status.HTTP_201_CREATED, tags=["Lotes"])
+@router.post(
+    "/lotes", response_model=LoteResponse, status_code=status.HTTP_201_CREATED,
+    tags=["Lotes"], dependencies=[Depends(require_role(*STAFF_ALMACEN))],
+)
 def crear_lote(data: LoteCreate, db: Session = Depends(get_db)):
     lote = Lote(**data.model_dump())
     db.add(lote)
@@ -169,7 +215,10 @@ def crear_lote(data: LoteCreate, db: Session = Depends(get_db)):
     return lote
 
 
-@router.put("/lotes/{codigo}", response_model=LoteResponse, tags=["Lotes"])
+@router.put(
+    "/lotes/{codigo}", response_model=LoteResponse,
+    tags=["Lotes"], dependencies=[Depends(require_role(*STAFF_ALMACEN))],
+)
 def actualizar_lote(codigo: int, data: LoteUpdate, db: Session = Depends(get_db)):
     lote = db.query(Lote).filter(Lote.codigoLote == codigo).first()
     if not lote:
@@ -181,7 +230,10 @@ def actualizar_lote(codigo: int, data: LoteUpdate, db: Session = Depends(get_db)
     return lote
 
 
-@router.delete("/lotes/{codigo}", status_code=status.HTTP_204_NO_CONTENT, tags=["Lotes"])
+@router.delete(
+    "/lotes/{codigo}", status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Lotes"], dependencies=[Depends(require_role(*STAFF_ALMACEN))],
+)
 def eliminar_lote(codigo: int, db: Session = Depends(get_db)):
     lote = db.query(Lote).filter(Lote.codigoLote == codigo).first()
     if not lote:

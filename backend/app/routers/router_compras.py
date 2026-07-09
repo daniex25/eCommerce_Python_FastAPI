@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 
+from app.core.deps import require_role
 from app.db.database import get_db
 from app.models.modelos_compras import Proveedor, OrdenDeCompra, DetalleOrdenCompra
 from app.schemas.schemas_compras import (
@@ -10,7 +11,12 @@ from app.schemas.schemas_compras import (
     DetalleOrdenCreate, DetalleOrdenUpdate, DetalleOrdenResponse,
 )
 
-router = APIRouter()
+# Abastecimiento (CUN200): proveedores y órdenes de compra son información
+# interna del negocio, sin ninguna vista pública — todo el router requiere
+# sesión de Administrador o Encargado de Almacén (RS0029).
+STAFF_ALMACEN = ("Administrador", "Encargado de Almacén", "Administrador del Sistema")
+
+router = APIRouter(dependencies=[Depends(require_role(*STAFF_ALMACEN))])
 
 
 # ── Proveedores ────────────────────────────────────────────────────────────

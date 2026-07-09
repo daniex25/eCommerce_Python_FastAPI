@@ -1,15 +1,20 @@
 """Script de datos semilla para desarrollo local.
 
-Carga categorías, laboratorios, productos y proveedores de demostración,
-derivados de frontend/src/app/core/data.service.ts para que backend y
-frontend compartan el mismo catálogo de referencia. Cada tabla se siembra
-solo si está vacía, para poder reejecutar el script sin duplicar datos.
+Carga categorías, laboratorios, productos, proveedores, un cliente y las
+cuentas de usuario de demostración (una por rol), derivados de
+frontend/src/app/core/data.service.ts y auth.service.ts para que backend y
+frontend compartan las mismas credenciales de referencia. Cada tabla se
+siembra solo si está vacía, para poder reejecutar el script sin duplicar
+datos.
 
 Uso: python -m app.seed
 """
+from app.core.security import hash_password
 from app.db.database import SessionLocal
 from app.models.modelos_almacen import Categoria, Laboratorio, Producto
 from app.models.modelos_compras import Proveedor
+from app.models.modelos_ventas import Cliente
+from app.models.modelos_seguridad import Usuario
 
 CATEGORIAS = [
     {"nombre": "Medicamentos", "descripcion": "De marca y genéricos"},
@@ -59,6 +64,25 @@ PROVEEDORES = [
     {"rucProveedor": "20418108151", "razonSocial": "Química Suiza Comercial S.A.", "direccion": "Av. República de Panamá 2461", "telefono": "014119000", "correoElectronico": "contacto@quimicasuiza.com"},
     {"rucProveedor": "20512655305", "razonSocial": "Perufarma S.A.", "direccion": "Av. Los Frutales 220, Ate", "telefono": "013171800", "correoElectronico": "pedidos@perufarma.com.pe"},
 ]
+
+CLIENTE_DEMO = {
+    "nombres": "María Elena", "apellidos": "Quispe Huamán", "dni": "45872136",
+    "telefono": "987654321", "correoElectronico": "cliente@correo.com",
+    "direccion": "Av. Grau 521, Huacho",
+}
+
+# Contraseña de demostración para las 7 cuentas: "123456" (RS0033 — se
+# almacena cifrada con bcrypt, nunca en texto plano).
+USUARIOS_DEMO = [
+    {"nombres": "María Elena Quispe", "correoElectronico": "cliente@correo.com", "rol": "Cliente", "estado": True, "cliente": True},
+    {"nombres": "Téc. José Pérez", "correoElectronico": "tecnico@boticacentral.pe", "rol": "Técnico de Farmacia", "estado": True},
+    {"nombres": "Q.F. Andrea Salinas", "correoElectronico": "quimico@boticacentral.pe", "rol": "Químico Farmacéutico", "estado": True},
+    {"nombres": "Carlos Mendoza", "correoElectronico": "admin@boticacentral.pe", "rol": "Administrador", "estado": True},
+    {"nombres": "Rosa Núñez", "correoElectronico": "almacen@boticacentral.pe", "rol": "Encargado de Almacén", "estado": True},
+    {"nombres": "Pedro Castillo", "correoElectronico": "repartidor@boticacentral.pe", "rol": "Repartidor", "estado": True},
+    {"nombres": "Luis Torres (cesado)", "correoElectronico": "cesado@boticacentral.pe", "rol": "Técnico de Farmacia", "estado": False},
+]
+PASSWORD_DEMO = "123456"
 
 
 def _seed_categorias(db) -> dict[str, int]:
@@ -111,6 +135,35 @@ def _seed_proveedores(db) -> None:
         print("Proveedor ya tiene registros, se omite.")
 
 
+def _seed_usuarios_demo(db) -> None:
+    """Cuentas de demostración (una por rol) — RS5601, CUS502."""
+    if db.query(Usuario).count() > 0:
+        print("Usuario ya tiene registros, se omite.")
+        return
+
+    cliente = db.query(Cliente).filter(Cliente.correoElectronico == CLIENTE_DEMO["correoElectronico"]).first()
+    if not cliente:
+        cliente = Cliente(**CLIENTE_DEMO, estado=True)
+        db.add(cliente)
+        db.flush()
+
+    password_hash = hash_password(PASSWORD_DEMO)
+    usuarios = [
+        Usuario(
+            nombres=u["nombres"],
+            correoElectronico=u["correoElectronico"],
+            passwordHash=password_hash,
+            rol=u["rol"],
+            estado=u["estado"],
+            codigoCliente=cliente.codigoCliente if u.get("cliente") else None,
+        )
+        for u in USUARIOS_DEMO
+    ]
+    db.add_all(usuarios)
+    db.commit()
+    print(f"Usuario: {len(usuarios)} cuentas de demostración insertadas (password: '{PASSWORD_DEMO}').")
+
+
 def seed() -> None:
     db = SessionLocal()
     try:
@@ -118,6 +171,7 @@ def seed() -> None:
         laboratorios = _seed_laboratorios(db)
         _seed_productos(db, categorias, laboratorios)
         _seed_proveedores(db)
+        _seed_usuarios_demo(db)
     finally:
         db.close()
 

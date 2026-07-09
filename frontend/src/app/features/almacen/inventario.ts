@@ -20,10 +20,10 @@ import { DataService } from '../../core/data.service';
     <div class="card card-pad-0">
       <div class="flex between" style="padding:1rem 1.25rem">
         <div class="flex">
-          <input class="inp" style="width:260px" [(ngModel)]="q" placeholder="🔍 Buscar producto…" />
+          <input class="inp" style="width:260px" [(ngModel)]="q" placeholder="Buscar producto…" />
           <select class="inp" [(ngModel)]="cat" style="width:200px"><option value="">Todas las categorías</option>@for(c of data.getCategorias(); track c.codigoCategoria){<option [value]="c.nombre">{{c.nombre}}</option>}</select>
         </div>
-        <button class="btn btn-outline btn-sm">⬇ Exportar Excel</button>
+        <button class="btn btn-outline btn-sm"><i class="fa-solid fa-download"></i> Exportar Excel</button>
       </div>
       <div class="table-wrap" style="border:none">
         <table class="tbl">
@@ -31,7 +31,7 @@ import { DataService } from '../../core/data.service';
           <tbody>
             @for (p of filtrados(); track p.codigoProducto) {
               <tr>
-                <td><b>{{ p.imagen }} {{ p.nombreProducto }}</b><div class="muted small">{{ p.presentacion }}</div></td>
+                <td><b><i class="fa-solid {{ p.icono }}"></i> {{ p.nombreProducto }}</b><div class="muted small">{{ p.presentacion }}</div></td>
                 <td>{{ p.categoria }}</td>
                 <td>{{ p.laboratorio }}</td>
                 <td class="num"><b>{{ p.stockDisponible }}</b></td>

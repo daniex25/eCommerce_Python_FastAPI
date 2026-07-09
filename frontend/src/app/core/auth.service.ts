@@ -1,4 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
+import { Observable, tap, map, catchError, of } from 'rxjs';
+import { ApiService, SesionResponse, UsuarioBackend, RegistroClienteRequest } from './api.service';
 
 export type Rol =
   | 'Cliente'
@@ -15,92 +17,139 @@ export interface Usuario {
   codigo: number;
   nombre: string;
   correo: string;
-  password: string;        // solo demo (en backend iría cifrada — [RS0033])
   rol: Rol;
-  estado: boolean;         // false = cuenta deshabilitada (empleado cesado)
+  estado: boolean;
   iniciales: string;
+  codigoCliente: number | null;
 }
 
 export interface ResultadoLogin {
   ok: boolean;
-  tipo?: 'invalida' | 'bloqueada' | 'inactivo';
   mensaje?: string;
   usuario?: Usuario;
   redirect?: string;
 }
 
-export interface RegistroAuditoria {
-  correo: string;
-  fechaHora: string;
-  resultado: 'Exitoso' | 'Fallido' | 'Bloqueado' | 'Inactivo';
+// Exportada para que `auth.interceptor.ts` lea el token directo de
+// localStorage sin inyectar AuthService: inyectarlo ahí generaría una
+// dependencia circular (NG0200), porque el propio constructor de
+// AuthService dispara una petición HTTP (GET /auth/me) que pasa por ese
+// interceptor mientras AuthService todavía se está construyendo.
+export const CLAVE_TOKEN = 'botica_token';
+
+function iniciales(nombre: string): string {
+  const partes = nombre.trim().split(/\s+/).filter(Boolean);
+  return ((partes[0]?.[0] || '') + (partes[1]?.[0] || '')).toUpperCase();
 }
 
-const MAX_INTENTOS = 3;
+function mapUsuario(u: UsuarioBackend): Usuario {
+  return {
+    codigo: u.codigoUsuario,
+    nombre: u.nombres,
+    correo: u.correoElectronico,
+    rol: u.rol as Rol,
+    estado: u.estado,
+    iniciales: iniciales(u.nombres),
+    codigoCliente: u.codigoCliente,
+  };
+}
+
+// Decodifica el payload del JWT (base64url) solo para restaurar la sesión
+// de forma optimista al recargar la página; la fuente de verdad sigue
+// siendo el backend, validado a continuación vía GET /auth/me.
+function decodificarPayload(token: string): { sub: string; correo: string; rol: string } | null {
+  try {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(base64));
+  } catch {
+    return null;
+  }
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private api = inject(ApiService);
 
-  // ── Usuarios de demostración (uno por rol) ──
-  usuarios: Usuario[] = [
-    { codigo: 1, nombre: 'María Elena Quispe', correo: 'cliente@correo.com', password: '123456', rol: 'Cliente', estado: true, iniciales: 'MQ' },
-    { codigo: 2, nombre: 'Téc. José Pérez', correo: 'tecnico@boticacentral.pe', password: '123456', rol: 'Técnico de Farmacia', estado: true, iniciales: 'JP' },
-    { codigo: 3, nombre: 'Q.F. Andrea Salinas', correo: 'quimico@boticacentral.pe', password: '123456', rol: 'Químico Farmacéutico', estado: true, iniciales: 'AS' },
-    { codigo: 4, nombre: 'Carlos Mendoza', correo: 'admin@boticacentral.pe', password: '123456', rol: 'Administrador', estado: true, iniciales: 'CM' },
-    { codigo: 5, nombre: 'Rosa Núñez', correo: 'almacen@boticacentral.pe', password: '123456', rol: 'Encargado de Almacén', estado: true, iniciales: 'RN' },
-    { codigo: 6, nombre: 'Pedro Castillo', correo: 'repartidor@boticacentral.pe', password: '123456', rol: 'Repartidor', estado: true, iniciales: 'PC' },
-    { codigo: 7, nombre: 'Luis Torres (cesado)', correo: 'cesado@boticacentral.pe', password: '123456', rol: 'Técnico de Farmacia', estado: false, iniciales: 'LT' },
-  ];
-
-  // Sesión activa
   usuarioActual = signal<Usuario | null>(null);
+  private token: string | null = null;
 
-  // Intentos fallidos por correo (para bloqueo temporal — [6.2])
-  private intentos = new Map<string, number>();
+  constructor() {
+    const token = localStorage.getItem(CLAVE_TOKEN);
+    if (!token) return;
 
-  // Bitácora de auditoría en memoria ([RS0034])
-  auditoria: RegistroAuditoria[] = [];
+    const payload = decodificarPayload(token);
+    if (!payload) {
+      localStorage.removeItem(CLAVE_TOKEN);
+      return;
+    }
 
-  intentosRestantes(correo: string): number {
-    return Math.max(0, MAX_INTENTOS - (this.intentos.get(correo.toLowerCase()) || 0));
+    this.token = token;
+    // Restauración optimista (evita parpadeo de "no autenticado" en el
+    // primer render); se confirma/corrige de inmediato contra el backend.
+    this.usuarioActual.set({
+      codigo: +payload.sub,
+      nombre: '',
+      correo: payload.correo,
+      rol: payload.rol as Rol,
+      estado: true,
+      iniciales: '',
+      codigoCliente: null,
+    });
+
+    this.api.me().subscribe({
+      next: (u) => this.usuarioActual.set(mapUsuario(u)),
+      error: () => this.cerrarSesionLocal(),
+    });
   }
 
-  login(correo: string, password: string): ResultadoLogin {
-    const key = correo.trim().toLowerCase();
-    const fallidos = this.intentos.get(key) || 0;
-
-    // 6.2 — Cuenta bloqueada por intentos fallidos
-    if (fallidos >= MAX_INTENTOS) {
-      this.registrar(key, 'Bloqueado');
-      return { ok: false, tipo: 'bloqueada', mensaje: 'Cuenta bloqueada temporalmente por múltiples intentos fallidos. Inténtalo nuevamente en 15 minutos o restablece tu contraseña.' };
-    }
-
-    const usuario = this.usuarios.find(u => u.correo.toLowerCase() === key);
-
-    // 6.1 — Credenciales inválidas (no existe o contraseña incorrecta)
-    if (!usuario || usuario.password !== password) {
-      const n = fallidos + 1;
-      this.intentos.set(key, n);
-      this.registrar(key, 'Fallido');
-      if (n >= MAX_INTENTOS) {
-        return { ok: false, tipo: 'bloqueada', mensaje: 'Cuenta bloqueada temporalmente por superar los intentos permitidos.' };
-      }
-      return { ok: false, tipo: 'invalida', mensaje: `Correo o contraseña incorrectos. Te queda(n) ${MAX_INTENTOS - n} intento(s).` };
-    }
-
-    // 6.3 — Usuario inactivo / deshabilitado
-    if (!usuario.estado) {
-      this.registrar(key, 'Inactivo');
-      return { ok: false, tipo: 'inactivo', mensaje: 'Tu cuenta se encuentra deshabilitada. Comunícate con el Administrador del Sistema.' };
-    }
-
-    // Éxito — credenciales válidas
-    this.intentos.delete(key);
-    this.usuarioActual.set(usuario);
-    this.registrar(key, 'Exitoso');
-    return { ok: true, usuario, redirect: this.redirectPorRol(usuario.rol) };
+  getToken(): string | null {
+    return this.token;
   }
 
-  logout() { this.usuarioActual.set(null); }
+  login(correo: string, password: string): Observable<ResultadoLogin> {
+    return this.api.login({ correoElectronico: correo, password }).pipe(
+      tap((sesion) => this.guardarSesion(sesion)),
+      map((sesion) => {
+        const usuario = mapUsuario(sesion.usuario);
+        return { ok: true, usuario, redirect: this.redirectPorRol(usuario.rol) } as ResultadoLogin;
+      }),
+      catchError((err) => of({ ok: false, mensaje: mensajeError(err) } as ResultadoLogin))
+    );
+  }
+
+  registrarCliente(data: RegistroClienteRequest): Observable<ResultadoLogin> {
+    return this.api.registrarCliente(data).pipe(
+      tap((sesion) => this.guardarSesion(sesion)),
+      map((sesion) => {
+        const usuario = mapUsuario(sesion.usuario);
+        return { ok: true, usuario, redirect: this.redirectPorRol(usuario.rol) } as ResultadoLogin;
+      }),
+      catchError((err) => of({ ok: false, mensaje: mensajeError(err) } as ResultadoLogin))
+    );
+  }
+
+  recuperarPassword(correo: string): Observable<{ mensaje: string }> {
+    return this.api.recuperarPassword(correo);
+  }
+
+  logout() {
+    if (this.token) {
+      this.api.logout().subscribe({ error: () => {} });
+    }
+    this.cerrarSesionLocal();
+  }
+
+  private guardarSesion(sesion: SesionResponse) {
+    this.token = sesion.accessToken;
+    localStorage.setItem(CLAVE_TOKEN, sesion.accessToken);
+    this.usuarioActual.set(mapUsuario(sesion.usuario));
+  }
+
+  private cerrarSesionLocal() {
+    this.token = null;
+    localStorage.removeItem(CLAVE_TOKEN);
+    this.usuarioActual.set(null);
+  }
 
   grupo(rol: Rol): Grupo {
     if (rol === 'Cliente') return 'Cliente';
@@ -108,7 +157,7 @@ export class AuthService {
     return 'Empleado';
   }
 
-  // 5.x — Redirección a la interfaz correspondiente al rol ([RS0029])
+  // Redirección a la interfaz correspondiente al rol ([RS0029])
   redirectPorRol(rol: Rol): string {
     switch (rol) {
       case 'Cliente': return '/tienda/catalogo';
@@ -121,8 +170,8 @@ export class AuthService {
       default: return '/';
     }
   }
+}
 
-  private registrar(correo: string, resultado: RegistroAuditoria['resultado']) {
-    this.auditoria.unshift({ correo, resultado, fechaHora: new Date().toLocaleString('es-PE') });
-  }
+function mensajeError(err: any): string {
+  return err?.error?.detail || 'No se pudo completar la operación. Inténtalo nuevamente.';
 }

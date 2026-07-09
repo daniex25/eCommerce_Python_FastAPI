@@ -1,11 +1,18 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/auth.guard';
+
+const ROLES_INTRANET = [
+  'Técnico de Farmacia', 'Químico Farmacéutico', 'Administrador',
+  'Encargado de Almacén', 'Administrador del Sistema',
+];
 
 export const routes: Routes = [
   // Hub raíz
   { path: '', loadComponent: () => import('./features/inicio/inicio').then(m => m.Inicio) },
 
-  // ── Autenticación (CUS501) ──
+  // ── Autenticación (CUS501/CUS101) ──
   { path: 'login', loadComponent: () => import('./features/auth/login').then(m => m.Login) },
+  { path: 'registro', loadComponent: () => import('./features/auth/registro').then(m => m.Registro) },
   { path: 'recuperar', loadComponent: () => import('./features/auth/recuperar').then(m => m.Recuperar) },
 
   // ── Tienda Web (Cliente) ──
@@ -16,11 +23,26 @@ export const routes: Routes = [
       { path: '', redirectTo: 'catalogo', pathMatch: 'full' },
       { path: 'catalogo', loadComponent: () => import('./features/tienda/catalogo').then(m => m.Catalogo) },
       { path: 'producto/:id', loadComponent: () => import('./features/tienda/ficha-producto').then(m => m.FichaProducto) },
-      { path: 'carrito', loadComponent: () => import('./features/tienda/carrito').then(m => m.Carrito) },
-      { path: 'checkout', loadComponent: () => import('./features/tienda/checkout').then(m => m.Checkout) },
-      { path: 'confirmacion', loadComponent: () => import('./features/tienda/confirmacion').then(m => m.Confirmacion) },
-      { path: 'seguimiento', loadComponent: () => import('./features/tienda/seguimiento').then(m => m.Seguimiento) },
-      { path: 'mis-compras', loadComponent: () => import('./features/tienda/mis-compras').then(m => m.MisCompras) },
+      {
+        path: 'carrito', loadComponent: () => import('./features/tienda/carrito').then(m => m.Carrito),
+        canActivate: [authGuard], data: { roles: ['Cliente'] },
+      },
+      {
+        path: 'checkout', loadComponent: () => import('./features/tienda/checkout').then(m => m.Checkout),
+        canActivate: [authGuard], data: { roles: ['Cliente'] },
+      },
+      {
+        path: 'confirmacion', loadComponent: () => import('./features/tienda/confirmacion').then(m => m.Confirmacion),
+        canActivate: [authGuard], data: { roles: ['Cliente'] },
+      },
+      {
+        path: 'seguimiento', loadComponent: () => import('./features/tienda/seguimiento').then(m => m.Seguimiento),
+        canActivate: [authGuard], data: { roles: ['Cliente'] },
+      },
+      {
+        path: 'mis-compras', loadComponent: () => import('./features/tienda/mis-compras').then(m => m.MisCompras),
+        canActivate: [authGuard], data: { roles: ['Cliente'] },
+      },
     ],
   },
 
@@ -28,6 +50,8 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () => import('./layouts/intranet-layout').then(m => m.IntranetLayout),
+    canActivate: [authGuard],
+    data: { roles: ROLES_INTRANET },
     children: [
       // Proceso 1 — POS
       { path: 'pos/venta', loadComponent: () => import('./features/pos/pos-venta').then(m => m.PosVenta) },
@@ -57,6 +81,8 @@ export const routes: Routes = [
   {
     path: 'repartidor',
     loadComponent: () => import('./layouts/repartidor-layout').then(m => m.RepartidorLayout),
+    canActivate: [authGuard],
+    data: { roles: ['Repartidor'] },
     children: [
       { path: '', redirectTo: 'entregas', pathMatch: 'full' },
       { path: 'entregas', loadComponent: () => import('./features/repartidor/entregas-repartidor').then(m => m.EntregasRepartidor) },

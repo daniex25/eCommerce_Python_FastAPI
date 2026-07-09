@@ -25,7 +25,7 @@ export interface Producto {
   // Solo frontend (no existe en backend):
   categoria?: string;
   laboratorio?: string;
-  imagen?: string;
+  icono?: string;
   presentacion?: string;
   stockMinimo?: number;
 }
@@ -107,7 +107,7 @@ export interface RecetaMedica {
   medicoTratante: string;
   fechaEmision: string;
   estado: 'Pendiente' | 'Aprobada' | 'Rechazada';
-  imagen?: string;
+  icono?: string;
   cmp?: string;
   producto?: string;
 }

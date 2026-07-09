@@ -20,7 +20,7 @@ import { DataService, IGV_RATE } from '../../core/data.service';
               @for (i of data.getCarrito(); track i.producto.codigoProducto) {
                 <tr>
                   <td>
-                    <div class="ci"><span class="ci-img">{{ i.producto.imagen }}</span>
+                    <div class="ci"><span class="ci-img"><i class="fa-solid {{ i.producto.icono }}"></i></span>
                       <div><b>{{ i.producto.nombreProducto }}</b><div class="muted small">{{ i.producto.laboratorio }} · {{ i.producto.presentacion }}</div></div>
                     </div>
                   </td>
@@ -33,7 +33,7 @@ import { DataService, IGV_RATE } from '../../core/data.service';
                     </div>
                   </td>
                   <td class="num money">S/ {{ (i.producto.precioVenta * i.cantidad).toFixed(2) }}</td>
-                  <td class="center"><button class="x" (click)="data.quitarDelCarrito(i.producto.codigoProducto)">🗑️</button></td>
+                  <td class="center"><button class="x" (click)="data.quitarDelCarrito(i.producto.codigoProducto)"><i class="fa-solid fa-trash"></i></button></td>
                 </tr>
               }
             </tbody>
@@ -54,7 +54,7 @@ import { DataService, IGV_RATE } from '../../core/data.service';
     </div>
     } @else {
       <div class="card center" style="padding:3rem">
-        <div style="font-size:3rem">🛒</div>
+        <div style="font-size:3rem"><i class="fa-solid fa-cart-shopping"></i></div>
         <h3>Tu carrito está vacío</h3>
         <p class="muted">Agrega productos desde el catálogo.</p>
         <a routerLink="/tienda/catalogo" class="btn btn-primary mt">Ver catálogo</a>
@@ -65,16 +65,17 @@ import { DataService, IGV_RATE } from '../../core/data.service';
   styles: [`
     .car-grid { display:grid; grid-template-columns:1fr 320px; gap:1.25rem; align-items:start; }
     .ci { display:flex; align-items:center; gap:.75rem; }
-    .ci-img { font-size:1.8rem; background:#f8fafc; border-radius:8px; padding:.35rem .55rem; }
-    .qty { display:inline-flex; align-items:center; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; }
-    .qty button { border:none; background:#f1f5f9; width:30px; height:32px; cursor:pointer; font-size:1rem; }
+    .ci-img { font-size:1.5rem; color:var(--accent-blue); background:var(--glass-bg-strong); border-radius:8px; padding:.5rem .65rem; }
+    .qty { display:inline-flex; align-items:center; border:1px solid var(--glass-border-strong); border-radius:8px; overflow:hidden; }
+    .qty button { border:none; background:var(--glass-bg-strong); color:var(--text-primary); width:30px; height:32px; cursor:pointer; font-size:1rem; }
     .qty span { width:38px; text-align:center; font-weight:600; }
-    .x { border:none; background:transparent; cursor:pointer; font-size:1.1rem; }
-    .car-foot { padding:1rem 1.25rem; border-top:1px solid #f1f5f9; }
+    .x { border:none; background:transparent; color:var(--text-secondary); cursor:pointer; font-size:1rem; }
+    .x:hover { color:var(--danger); }
+    .car-foot { padding:1rem 1.25rem; border-top:1px solid var(--glass-border); }
     .resumen { position:sticky; top:80px; }
-    .resumen h3 { margin-bottom:1rem; }
-    .r-line { display:flex; justify-content:space-between; padding:.45rem 0; font-size:.9rem; color:#475569; }
-    .r-total { display:flex; justify-content:space-between; align-items:center; padding-top:.85rem; margin-top:.5rem; border-top:2px solid #f1f5f9; font-weight:800; }
+    .resumen h3 { margin-bottom:1rem; color:var(--text-primary); }
+    .r-line { display:flex; justify-content:space-between; padding:.45rem 0; font-size:.9rem; color:var(--text-secondary); }
+    .r-total { display:flex; justify-content:space-between; align-items:center; padding-top:.85rem; margin-top:.5rem; border-top:2px solid var(--glass-border); font-weight:800; color:var(--text-primary); }
     .r-pay { text-align:center; margin-top:.75rem; }
     @media (max-width:760px){ .car-grid{ grid-template-columns:1fr; } }
   `],

@@ -49,7 +49,7 @@ import { Producto } from '../../core/models';
       <section class="productos">
         @for (p of filtrados(); track p.codigoProducto) {
           <div class="prod card">
-            <a [routerLink]="['/tienda/producto', p.codigoProducto]" class="prod-img">{{ p.imagen }}</a>
+            <a [routerLink]="['/tienda/producto', p.codigoProducto]" class="prod-img"><i class="fa-solid {{ p.icono }}"></i></a>
             @if (p.condicionVenta === 'Bajo Receta') { <span class="receta badge badge-amber">Venta bajo receta</span> }
             <div class="prod-lab">{{ p.laboratorio }}</div>
             <a [routerLink]="['/tienda/producto', p.codigoProducto]" class="prod-name">{{ p.nombreProducto }}</a>
@@ -81,12 +81,12 @@ import { Producto } from '../../core/models';
     .filtros h3 { margin-bottom:1rem; }
     .productos { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:1rem; }
     .prod { display:flex; flex-direction:column; position:relative; }
-    .prod-img { font-size:3.2rem; text-align:center; background:#f8fafc; border-radius:10px; padding:1.1rem 0; margin-bottom:.6rem; }
+    .prod-img { display:block; font-size:2.6rem; text-align:center; background:var(--glass-bg-strong); border:1px solid var(--glass-border); color:var(--accent-blue); border-radius:10px; padding:1.1rem 0; margin-bottom:.6rem; }
     .receta { position:absolute; top:.65rem; right:.65rem; }
-    .prod-lab { font-size:.72rem; color:#0369a1; font-weight:700; text-transform:uppercase; }
-    .prod-name { font-weight:700; font-size:.95rem; line-height:1.25; margin:.15rem 0; color:#0f172a; }
-    .prod-name:hover { color:#16a34a; }
-    .toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%); background:#15803d; color:#fff; padding:.7rem 1.4rem; border-radius:999px; font-weight:600; box-shadow:0 10px 30px rgba(0,0,0,.25); z-index:50; }
+    .prod-lab { font-size:.72rem; color:var(--accent-blue); font-weight:700; text-transform:uppercase; }
+    .prod-name { font-weight:700; font-size:.95rem; line-height:1.25; margin:.15rem 0; color:var(--text-primary); }
+    .prod-name:hover { color:var(--accent-blue); }
+    .toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%); background:var(--accent-gradient); color:#fff; padding:.7rem 1.4rem; border-radius:999px; font-weight:600; box-shadow:var(--glow-blue); z-index:50; }
     @media (max-width:760px){ .cat-grid{ grid-template-columns:1fr; } .filtros{ position:static; } }
   `],
 })

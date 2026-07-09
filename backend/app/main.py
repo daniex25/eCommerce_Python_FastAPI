@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import router_almacen, router_ventas, router_compras
+from app.routers import router_almacen, router_ventas, router_compras, router_auth
 
 app = FastAPI(
     title="eCommerce FastAPI",
@@ -17,6 +17,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(router_auth.router)
 app.include_router(router_almacen.router, tags=["Almacén"])
 app.include_router(router_ventas.router, tags=["Ventas"])
 app.include_router(router_compras.router, tags=["Compras"])

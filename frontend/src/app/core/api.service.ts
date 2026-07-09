@@ -93,8 +93,48 @@ export class ApiService {
     return this.http.post(`${this.apiUrl}/comprobantes/emitir`, data);
   }
 
-  // ── Autenticación (para cuando esté lista) ──
-  login(credentials: { usuario: string; password: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/login`, credentials);
+  // ── Autenticación (CUS501/CUS101) ──
+  login(credenciales: { correoElectronico: string; password: string }): Observable<SesionResponse> {
+    return this.http.post<SesionResponse>(`${this.apiUrl}/auth/login`, credenciales);
   }
+  registrarCliente(datos: RegistroClienteRequest): Observable<SesionResponse> {
+    return this.http.post<SesionResponse>(`${this.apiUrl}/auth/registro-cliente`, datos);
+  }
+  logout(): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/auth/logout`, {});
+  }
+  me(): Observable<UsuarioBackend> {
+    return this.http.get<UsuarioBackend>(`${this.apiUrl}/auth/me`);
+  }
+  recuperarPassword(correoElectronico: string): Observable<{ mensaje: string }> {
+    return this.http.post<{ mensaje: string }>(`${this.apiUrl}/auth/recuperar-password`, { correoElectronico });
+  }
+}
+
+// ── Contratos de autenticación (alineados con schemas_seguridad.py) ──
+export interface UsuarioBackend {
+  codigoUsuario: number;
+  nombres: string;
+  correoElectronico: string;
+  rol: string;
+  estado: boolean;
+  codigoCliente: number | null;
+  fechaCreacion: string | null;
+  ultimoAcceso: string | null;
+}
+
+export interface SesionResponse {
+  accessToken: string;
+  tokenType: string;
+  usuario: UsuarioBackend;
+}
+
+export interface RegistroClienteRequest {
+  nombres: string;
+  apellidos: string;
+  dni: string;
+  telefono?: string;
+  correoElectronico: string;
+  direccion?: string;
+  password: string;
 }

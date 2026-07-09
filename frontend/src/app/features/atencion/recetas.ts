@@ -36,7 +36,7 @@ import { RecetaMedica } from '../../core/models';
           </div>
           <div class="visor-grid">
             <div class="visor">
-              <div class="visor-img">📄</div>
+              <div class="visor-img"><i class="fa-solid fa-file-medical"></i></div>
               <div class="visor-cap muted small">Imagen de la receta cargada por el cliente · Clic para ampliar</div>
             </div>
             <div class="datos">
