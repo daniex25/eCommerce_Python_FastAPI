@@ -1,0 +1,22 @@
+# Entornos virtuales
+eCommerceFastAPI-env/
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# Variables de entorno (credenciales)
+.env
+backend/.env
+
+Docs/Plan_Implementacion_Correcciones.md

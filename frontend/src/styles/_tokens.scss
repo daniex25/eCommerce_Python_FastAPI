@@ -1,0 +1,58 @@
+/* ============================================================
+   Botica Central — Sistema de diseño "Galaxia Azul"
+   Glassmorphism en tonos azul/índigo profundo (RS0024 — identidad visual).
+   Ver Docs/Plan_Implementacion_Correcciones.md, Fase 0.5.
+   ============================================================ */
+
+:root {
+  /* ---------- Fondo "espacio profundo" ---------- */
+  --bg-galaxy-1: #0a0e2a;
+  --bg-galaxy-2: #131a3a;
+  --bg-galaxy-3: #1e2a5e;
+  --bg-galaxy-gradient: linear-gradient(160deg, var(--bg-galaxy-1) 0%, var(--bg-galaxy-2) 45%, var(--bg-galaxy-3) 100%);
+
+  /* ---------- Acentos ---------- */
+  --accent-blue: #3b82f6;
+  --accent-blue-deep: #2563eb;   /* uso en fondos sólidos/botones: contraste AA con texto blanco (~5.2:1) */
+  --accent-indigo: #6366f1;
+  --accent-indigo-deep: #4f46e5; /* contraste AA con texto blanco (~6.3:1) */
+  --accent-violet: #8b5cf6;
+  --accent-gradient: linear-gradient(135deg, var(--accent-blue-deep), var(--accent-indigo-deep));
+  --accent-gradient-hover: linear-gradient(135deg, var(--accent-indigo-deep), var(--accent-violet));
+
+  /* ---------- Superficies de vidrio ---------- */
+  --glass-bg: rgba(255, 255, 255, .06);
+  --glass-bg-strong: rgba(255, 255, 255, .10);
+  --glass-border: rgba(255, 255, 255, .12);
+  --glass-border-strong: rgba(255, 255, 255, .22);
+  --glass-blur: blur(16px);
+
+  /* ---------- Texto ---------- */
+  --text-primary: #e8ebf5;
+  --text-secondary: #94a3b8;     /* contraste AA sobre --bg-galaxy-1: ~7.4:1 */
+  --text-on-accent: #ffffff;
+
+  /* ---------- Estados semánticos (sobre fondo oscuro) ---------- */
+  --ok: #34d399;
+  --ok-bg: rgba(52, 211, 153, .14);
+  --warn: #fbbf24;
+  --warn-bg: rgba(251, 191, 36, .14);
+  --danger: #f87171;
+  --danger-bg: rgba(248, 113, 113, .14);
+  --info: var(--accent-blue);
+  --info-bg: rgba(59, 130, 246, .14);
+
+  /* ---------- Glow / sombras ---------- */
+  --glow-blue: 0 0 0 1px rgba(59, 130, 246, .35), 0 8px 24px rgba(37, 99, 235, .35);
+  --glow-blue-sm: 0 0 0 1px rgba(59, 130, 246, .25), 0 2px 10px rgba(37, 99, 235, .25);
+  --shadow-glass: 0 8px 32px rgba(2, 6, 23, .45);
+  --shadow-glass-lg: 0 20px 60px rgba(2, 6, 23, .55);
+
+  /* ---------- Forma ---------- */
+  --radio: 16px;
+  --radio-sm: 10px;
+  --max: 1240px;
+
+  /* ---------- Tipografía ---------- */
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
