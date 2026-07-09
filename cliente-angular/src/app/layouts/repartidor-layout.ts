@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { RouterOutlet, RouterLink, Router } from '@angular/router';
+import { AuthService } from '../core/auth.service';
 
 @Component({
   selector: 'app-repartidor-layout',
@@ -13,7 +14,7 @@ import { RouterOutlet, RouterLink } from '@angular/router';
           <a routerLink="/" class="r-back">‹</a>
           <div>
             <b>App Repartidor</b>
-            <small>Pedro Castillo · Moto ABC-123</small>
+            <small>{{ usuario()?.nombre || 'Pedro Castillo' }} · Moto ABC-123</small>
           </div>
           <span class="badge badge-green">En línea</span>
         </div>
@@ -23,7 +24,7 @@ import { RouterOutlet, RouterLink } from '@angular/router';
         <a class="on">🛵<span>Entregas</span></a>
         <a>🗺️<span>Mapa</span></a>
         <a>📋<span>Historial</span></a>
-        <a>👤<span>Perfil</span></a>
+        <a (click)="logout()" style="cursor:pointer">⏻<span>Salir</span></a>
       </nav>
     </div>
   </div>
@@ -46,4 +47,9 @@ import { RouterOutlet, RouterLink } from '@angular/router';
     @media (max-width:480px){ .r-bg{ padding:0; } .phone{ width:100%; height:100vh; border-radius:0; border:none; } }
   `],
 })
-export class RepartidorLayout {}
+export class RepartidorLayout {
+  private auth = inject(AuthService);
+  private router = inject(Router);
+  usuario = this.auth.usuarioActual;
+  logout() { this.auth.logout(); this.router.navigateByUrl('/login'); }
+}

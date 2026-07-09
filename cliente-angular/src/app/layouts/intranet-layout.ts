@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { AuthService } from '../core/auth.service';
 
 @Component({
   selector: 'app-intranet-layout',
@@ -44,9 +45,10 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
       <header class="i-top">
         <div class="i-top-l">Sistema de Gestión — Botica Central</div>
         <div class="i-user">
-          <span class="badge badge-blue">Químico Farmacéutico</span>
-          <div class="ava">QF</div>
-          <div class="who"><b>Q.F. Andrea Salinas</b><small>Sede Huacho · Turno mañana</small></div>
+          <span class="badge badge-blue">{{ usuario()?.rol || 'Químico Farmacéutico' }}</span>
+          <div class="ava">{{ usuario()?.iniciales || 'AS' }}</div>
+          <div class="who"><b>{{ usuario()?.nombre || 'Q.F. Andrea Salinas' }}</b><small>Sede Huacho · Turno mañana</small></div>
+          <button class="salir" (click)="logout()" title="Cerrar sesión">⏻</button>
         </div>
       </header>
       <main class="i-main"><router-outlet /></main>
@@ -73,8 +75,15 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
     .ava { width:36px; height:36px; border-radius:50%; background:#0284c7; color:#fff; display:grid; place-items:center; font-weight:700; font-size:.8rem; }
     .who b { display:block; font-size:.82rem; }
     .who small { color:#94a3b8; font-size:.72rem; }
+    .salir { border:1px solid #e2e8f0; background:#fff; width:34px; height:34px; border-radius:8px; cursor:pointer; font-size:1rem; color:#dc2626; }
+    .salir:hover { background:#fee2e2; border-color:#fca5a5; }
     .i-main { flex:1; background:#f1f5f9; }
     @media (max-width:880px){ .i-side{ width:64px; } .i-brand b,.i-brand small,.grp,.i-nav a span+*{ display:none; } .i-nav a{ justify-content:center; } .who{ display:none; } }
   `],
 })
-export class IntranetLayout {}
+export class IntranetLayout {
+  private auth = inject(AuthService);
+  private router = inject(Router);
+  usuario = this.auth.usuarioActual;
+  logout() { this.auth.logout(); this.router.navigateByUrl('/login'); }
+}

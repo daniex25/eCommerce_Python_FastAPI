@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { DataService } from '../core/data.service';
+import { AuthService } from '../core/auth.service';
 
 @Component({
   selector: 'app-tienda-layout',
@@ -24,6 +25,11 @@ import { DataService } from '../core/data.service';
           <a routerLink="/tienda/carrito" class="t-cart" routerLinkActive="on">
             🛒 <span class="badge badge-green">{{ data.cantidadCarrito() }}</span>
           </a>
+          @if (usuario(); as u) {
+            <div class="t-acc"><div class="t-ava">{{ u.iniciales }}</div><span class="t-name">{{ u.nombre }}</span><button class="t-out" (click)="logout()">Salir</button></div>
+          } @else {
+            <a routerLink="/login" class="btn btn-primary btn-sm">Iniciar sesión</a>
+          }
           <a routerLink="/" class="t-exit" title="Volver al inicio">⌂</a>
         </nav>
       </div>
@@ -49,6 +55,10 @@ import { DataService } from '../core/data.service';
     .t-links a { font-size:.9rem; font-weight:600; color:#334155; }
     .t-links a.on, .t-links a:hover { color:#16a34a; }
     .t-cart { display:flex; align-items:center; gap:.35rem; }
+    .t-acc { display:flex; align-items:center; gap:.5rem; }
+    .t-ava { width:32px; height:32px; border-radius:50%; background:#16a34a; color:#fff; display:grid; place-items:center; font-weight:700; font-size:.72rem; }
+    .t-name { font-size:.82rem; font-weight:600; }
+    .t-out { border:1px solid #e2e8f0; background:#fff; border-radius:7px; padding:.25rem .6rem; font-size:.78rem; cursor:pointer; color:#dc2626; font-weight:600; }
     .t-exit { font-size:1.3rem; }
     .t-main { flex:1; }
     .t-foot { background:#0f172a; color:#94a3b8; font-size:.8rem; padding:1.25rem 0; margin-top:2rem; }
@@ -57,4 +67,8 @@ import { DataService } from '../core/data.service';
 })
 export class TiendaLayout {
   data = inject(DataService);
+  private auth = inject(AuthService);
+  private router = inject(Router);
+  usuario = this.auth.usuarioActual;
+  logout() { this.auth.logout(); this.router.navigateByUrl('/login'); }
 }

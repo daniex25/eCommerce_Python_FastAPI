@@ -14,7 +14,10 @@ import { RouterLink } from '@angular/router';
           <div class="bs">Sistema Integral de Gestión · Huacho, Huaura</div>
         </div>
       </div>
-      <span class="badge badge-green"><span class="dot" style="background:#16a34a"></span> Atención 24/7</span>
+      <div class="hub-top-r">
+        <span class="badge badge-green"><span class="dot" style="background:#16a34a"></span> Atención 24/7</span>
+        <a routerLink="/login" class="login-btn">🔒 Iniciar sesión</a>
+      </div>
     </header>
 
     <div class="hero">
@@ -96,6 +99,9 @@ import { RouterLink } from '@angular/router';
     .logo { width:48px; height:48px; border-radius:12px; background:#fff; color:#15803d; font-size:1.7rem; display:grid; place-items:center; font-weight:900; }
     .bn { font-size:1.3rem; font-weight:800; }
     .bs { font-size:.8rem; opacity:.85; }
+    .hub-top-r { display:flex; align-items:center; gap:1rem; }
+    .login-btn { background:#fff; color:#15803d; font-weight:700; padding:.5rem 1.1rem; border-radius:9px; font-size:.9rem; box-shadow:0 4px 12px rgba(0,0,0,.15); }
+    .login-btn:hover { background:#f0fdf4; }
     .hero { max-width:780px; margin:0 auto 2.5rem; text-align:center; color:#fff; }
     .hero h1 { font-size:2rem; line-height:1.2; }
     .hero p { opacity:.9; font-size:1.05rem; }

@@ -4,6 +4,10 @@ export const routes: Routes = [
   // Hub raíz
   { path: '', loadComponent: () => import('./features/inicio/inicio').then(m => m.Inicio) },
 
+  // ── Autenticación (CUS501) ──
+  { path: 'login', loadComponent: () => import('./features/auth/login').then(m => m.Login) },
+  { path: 'recuperar', loadComponent: () => import('./features/auth/recuperar').then(m => m.Recuperar) },
+
   // ── Tienda Web (Cliente) ──
   {
     path: 'tienda',
