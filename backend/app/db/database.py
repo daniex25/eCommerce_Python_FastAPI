@@ -3,8 +3,9 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from app.core.config import settings
 
+# Cambiamos postgresql:// por mysql+pymysql:// para que hable con tu XAMPP (MariaDB)
 URL_DATABASE = (
-    f"postgresql://{settings.db_username}:{settings.db_password}"
+    f"mysql+pymysql://{settings.db_username}:{settings.db_password}"
     f"@{settings.db_hostname}:{settings.db_port}/{settings.db_name}"
 )
 

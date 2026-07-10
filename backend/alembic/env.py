@@ -22,7 +22,7 @@ config = context.config
 # nunca desde un valor hardcodeado en alembic.ini.
 config.set_main_option(
     "sqlalchemy.url",
-    f"postgresql://{settings.db_username}:{settings.db_password}"
+    f"mysql+pymysql://{settings.db_username}:{settings.db_password}"
     f"@{settings.db_hostname}:{settings.db_port}/{settings.db_name}",
 )
 

@@ -2,11 +2,11 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    db_username: str = "postgres"
-    db_password: str = "admin"
+    db_username: str = "root"
+    db_password: str = ""
     db_hostname: str = "localhost"
-    db_port: int = 5432
-    db_name: str = "eCommerceFastAPIdb"
+    db_port: int = 3306
+    db_name: str = "botica_central"  # <-- Aquí pon el nombre exacto que le diste a tu base de datos en phpMyAdmin
     debug: bool = False
 
     # Autenticación (Fase 1 — RS0028, RS0033). En producción, jwt_secret_key
